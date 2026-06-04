@@ -1,0 +1,8 @@
+apiVersion: v2
+name: longhorn
+description: Longhorn — distributed block storage using the 75 GB data disk on each worker
+version: 1.0.0
+dependencies:
+  - name: longhorn
+    version: "1.7.2"
+    repository: "https://charts.longhorn.io"

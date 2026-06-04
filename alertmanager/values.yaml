@@ -1,0 +1,96 @@
+alertmanager:
+  # ── Persistence ───────────────────────────────────────────────────────────
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: longhorn
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+  # ── AlertManager config ───────────────────────────────────────────────────
+  # Credentials (Slack webhook, SMTP) come from ExternalSecret below.
+  # Reference them via env vars: ${SLACK_WEBHOOK_URL}, ${SMTP_PASSWORD}
+  config:
+    global:
+      resolve_timeout: 5m
+      # SMTP — fill in your relay details or leave for Slack-only
+      smtp_from: "alertmanager@caticloud.net"
+      smtp_smarthost: "smtp.office365.com:587"
+      smtp_auth_username: "alertmanager@caticloud.net"
+      smtp_auth_password: "${SMTP_PASSWORD}"
+      smtp_require_tls: true
+
+    route:
+      group_by: ["alertname", "cluster", "namespace"]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+      receiver: "slack-default"
+      routes:
+        # Critical alerts — immediate Slack notification
+        - match:
+            severity: critical
+          receiver: "slack-critical"
+          continue: true
+        # Warning alerts — batched Slack notification
+        - match:
+            severity: warning
+          receiver: "slack-default"
+
+    receivers:
+      - name: "slack-default"
+        slack_configs:
+          - api_url: "${SLACK_WEBHOOK_URL}"
+            channel: "#alerts"
+            title: '[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}'
+            text: |
+              *Cluster:* {{ .CommonLabels.cluster | default "unknown" }}
+              *Namespace:* {{ .CommonLabels.namespace | default "unknown" }}
+              {{ range .Alerts }}
+              *Alert:* {{ .Labels.alertname }}
+              *Summary:* {{ .Annotations.summary }}
+              *Description:* {{ .Annotations.description }}
+              {{ end }}
+            send_resolved: true
+
+      - name: "slack-critical"
+        slack_configs:
+          - api_url: "${SLACK_WEBHOOK_URL}"
+            channel: "#alerts-critical"
+            title: '🔴 CRITICAL: {{ .CommonLabels.alertname }} on {{ .CommonLabels.cluster }}'
+            send_resolved: true
+
+    inhibit_rules:
+      # Suppress warning-level alerts when the same alert is critical
+      - source_match:
+          severity: critical
+        target_match:
+          severity: warning
+        equal: ["alertname", "cluster", "namespace"]
+
+  # ── Environment — credentials from ExternalSecret ────────────────────────
+  extraEnvFrom:
+    - secretRef:
+        name: alertmanager-credentials
+
+  # ── Ingress ───────────────────────────────────────────────────────────────
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - host: alertmanager.caticloud.net
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: alertmanager-tls
+        hosts:
+          - alertmanager.caticloud.net
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod

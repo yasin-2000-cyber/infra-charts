@@ -1,0 +1,80 @@
+argo-cd:
+  global:
+    domain: argocd.caticloud.net
+
+  # ── ArgoCD Server ─────────────────────────────────────────────────────────
+  server:
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      hosts:
+        - argocd.caticloud.net
+      tls:
+        - secretName: argocd-tls
+          hosts:
+            - argocd.caticloud.net
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        nginx.ingress.kubernetes.io/ssl-passthrough: "false"
+        nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
+
+  # ── Repo Server ───────────────────────────────────────────────────────────
+  repoServer:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  # ── Application Controller ────────────────────────────────────────────────
+  controller:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  # ── Redis ─────────────────────────────────────────────────────────────────
+  redis:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 128Mi
+
+  # ── RBAC ─────────────────────────────────────────────────────────────────
+  configs:
+    rbac:
+      policy.default: role:readonly
+      policy.csv: |
+        p, role:devops, applications, *, */*, allow
+        p, role:devops, clusters, get, *, allow
+        p, role:devops, repositories, *, *, allow
+        g, devops, role:devops
+    params:
+      server.insecure: true   # TLS terminated at NGINX Ingress
+
+    # GitHub repo credentials — created manually before bootstrap
+    # kubectl create secret generic repo-credentials -n argocd \
+    #   --from-literal=username=<github-user> \
+    #   --from-literal=password=<github-pat> \
+    #   --label argocd.argoproj.io/secret-type=repository
+    repositories:
+      full-monitor-repo:
+        url: https://github.com/yasin-2000-cyber/infra-charts.git
+        type: git
+        name: full-monitor-sloution-aau

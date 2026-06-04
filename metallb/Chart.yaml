@@ -1,0 +1,8 @@
+apiVersion: v2
+name: metallb
+description: MetalLB load-balancer — provides LoadBalancer IPs for NGINX Ingress
+version: 1.0.0
+dependencies:
+  - name: metallb
+    version: "0.14.9"
+    repository: "oci://ghcr.io/metallb"

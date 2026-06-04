@@ -1,0 +1,11 @@
+{{- if .Values.apps.loki }}
+{{- include "app.standard" (dict
+    "name"           "loki"
+    "wave"           "8"
+    "path"           "loki"
+    "namespace"      "monitoring"
+    "repoURL"        .Values.repoURL
+    "targetRevision" .Values.targetRevision
+    "clusterURL"     .Values.clusterURL
+) }}
+{{- end }}

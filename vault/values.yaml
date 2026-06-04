@@ -1,0 +1,52 @@
+vault:
+  server:
+    # Standalone mode — single pod, file storage on Longhorn PVC
+    standalone:
+      enabled: true
+      config: |
+        ui = true
+
+        listener "tcp" {
+          tls_disable = 1
+          address     = "[::]:8200"
+          cluster_address = "[::]:8201"
+        }
+
+        storage "file" {
+          path = "/vault/data"
+        }
+
+    dataStorage:
+      enabled: true
+      size: 2Gi
+      storageClass: longhorn
+      accessMode: ReadWriteOnce
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      hosts:
+        - host: vault.caticloud.net
+          paths:
+            - /
+      tls:
+        - secretName: vault-tls
+          hosts:
+            - vault.caticloud.net
+      annotations:
+        cert-manager.io/cluster-issuer: ca-issuer
+
+  ui:
+    enabled: true
+
+  # Disable injector — we use External Secrets Operator instead
+  injector:
+    enabled: false

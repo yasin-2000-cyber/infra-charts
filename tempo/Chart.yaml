@@ -1,0 +1,8 @@
+apiVersion: v2
+name: tempo
+description: Grafana Tempo — multi-tenant trace storage hub (monolithic mode, Longhorn backend)
+version: 1.0.0
+dependencies:
+  - name: tempo
+    version: "1.10.3"
+    repository: "https://grafana.github.io/helm-charts"

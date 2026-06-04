@@ -1,0 +1,8 @@
+apiVersion: v2
+name: argo-cd
+description: ArgoCD — GitOps controller (installed once via helm, then self-managed)
+version: 1.0.0
+dependencies:
+  - name: argo-cd
+    version: "8.2.7"
+    repository: "https://argoproj.github.io/argo-helm"

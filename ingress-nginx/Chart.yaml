@@ -1,0 +1,8 @@
+apiVersion: v2
+name: ingress-nginx
+description: NGINX Ingress Controller — TLS termination and routing for all hub services
+version: 1.0.0
+dependencies:
+  - name: ingress-nginx
+    version: "4.11.3"
+    repository: "oci://ghcr.io/ingress-nginx"

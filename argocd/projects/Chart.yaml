@@ -1,0 +1,4 @@
+apiVersion: v2
+name: argocd-projects
+description: ArgoCD AppProject definitions for the hub observability cluster
+version: 1.0.0

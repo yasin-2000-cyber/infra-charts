@@ -1,0 +1,8 @@
+apiVersion: v2
+name: mimir
+description: Grafana Mimir — multi-tenant metrics storage hub (monolithic mode, Longhorn backend)
+version: 1.0.0
+dependencies:
+  - name: mimir-distributed
+    version: "5.5.0"
+    repository: "https://grafana.github.io/helm-charts"

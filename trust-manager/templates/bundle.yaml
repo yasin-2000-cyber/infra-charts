@@ -1,0 +1,19 @@
+# Distributes the internal CA certificate to any namespace labeled
+# with hub-ca-bundle: "true". Used by ArgoCD and any component that
+# needs to trust the internal CA issuer.
+apiVersion: trust.cert-manager.io/v1alpha1
+kind: Bundle
+metadata:
+  name: hub-ca-bundle
+spec:
+  sources:
+    - secret:
+        name: selfsigned-ca-secret
+        key: ca.crt
+      namespace: cert-manager
+  target:
+    configMap:
+      key: ca-bundle.crt
+    namespaceSelector:
+      matchLabels:
+        hub-ca-bundle: "true"

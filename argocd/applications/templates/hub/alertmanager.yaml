@@ -1,0 +1,11 @@
+{{- if .Values.apps.alertmanager }}
+{{- include "app.standard" (dict
+    "name"           "alertmanager"
+    "wave"           "9"
+    "path"           "alertmanager"
+    "namespace"      "monitoring"
+    "repoURL"        .Values.repoURL
+    "targetRevision" .Values.targetRevision
+    "clusterURL"     .Values.clusterURL
+) }}
+{{- end }}

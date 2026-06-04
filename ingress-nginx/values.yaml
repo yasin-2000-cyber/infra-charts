@@ -1,0 +1,28 @@
+ingress-nginx:
+  controller:
+    ingressClassResource:
+      default: true
+
+    service:
+      type: LoadBalancer
+
+    # Only on workers
+    nodeSelector:
+      node-role: worker
+
+    config:
+      # Forward real client IP from MetalLB — restrict to node subnet
+      use-forwarded-headers: "true"
+      proxy-real-ip-cidr: "100.64.5.0/24"
+      # Allow large OTLP trace payloads from spokes
+      proxy-body-size: "32m"
+      # gRPC support for Tempo OTLP
+      http2: "true"
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi

@@ -1,0 +1,34 @@
+# Root App-of-Apps — apply this ONCE manually after ArgoCD is installed.
+# This single Application causes ArgoCD to discover and deploy everything else.
+#
+# Pre-requisites (run before applying this file):
+#   1. helm dep update infra-charts/argo-cd/ && helm install argo-cd infra-charts/argo-cd/ -n argocd --create-namespace
+#   2. kubectl create secret generic repo-credentials -n argocd \
+#        --from-literal=username=<github-user> \
+#        --from-literal=password=<github-pat>
+#   3. helm template infra-charts/argocd/projects/ | kubectl apply -f -
+#   4. kubectl apply -f infra-charts/bootstrap/app-of-apps.yaml
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-of-apps
+  namespace: argocd
+spec:
+  project: hub
+  source:
+    # TODO: Replace with actual GitHub repo URL once provided
+    repoURL: https://github.com/yasin-2000-cyber/infra-charts.git
+    targetRevision: HEAD
+    path: infra-charts/argocd/applications
+    helm:
+      releaseName: app-of-apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

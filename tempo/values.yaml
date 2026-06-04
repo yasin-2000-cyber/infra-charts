@@ -1,0 +1,66 @@
+tempo:
+  # ── Multi-tenancy ──────────────────────────────────────────────────────────
+  multitenancyEnabled: true
+
+  # ── Storage — local filesystem (Longhorn PVC) ──────────────────────────────
+  storage:
+    trace:
+      backend: local
+      local:
+        path: /var/tempo/traces
+      wal:
+        path: /var/tempo/wal
+
+  # ── Receivers — accept OTLP from Grafana Alloy on spokes ──────────────────
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+  # ── Retention — 7 days for test cluster ───────────────────────────────────
+  retention: 168h
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+
+# ── Persistent volume ─────────────────────────────────────────────────────────
+persistence:
+  enabled: true
+  size: 15Gi
+  storageClassName: longhorn
+  accessModes:
+    - ReadWriteOnce
+
+# ── Service — expose OTLP gRPC and HTTP ports ────────────────────────────────
+service:
+  type: ClusterIP
+  port: 3100
+
+# ── Ingress — HTTPS for OTLP HTTP (4318) and query API (3100) ────────────────
+# Note: OTLP gRPC (4317) uses a separate TCP IngressRoute (see below).
+# For gRPC from spokes, use the LoadBalancer service or configure TCP passthrough.
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hosts:
+    - host: tempo.caticloud.net
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: tempo-tls
+      hosts:
+        - tempo.caticloud.net
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # gRPC requires HTTP/2
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+    nginx.ingress.kubernetes.io/proxy-body-size: "32m"

@@ -1,0 +1,4 @@
+apiVersion: v2
+name: argocd-applications
+description: ArgoCD Application definitions for all hub cluster components
+version: 1.0.0

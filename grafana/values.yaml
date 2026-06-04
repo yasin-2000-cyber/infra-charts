@@ -1,0 +1,174 @@
+grafana:
+  # ── Persistence ───────────────────────────────────────────────────────────
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClassName: longhorn
+    accessModes:
+      - ReadWriteOnce
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+  # ── Azure AD SSO credentials injected from Vault via ExternalSecret ───────
+  # ExternalSecret creates the secret 'grafana-azuread-secret' with keys:
+  #   AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID
+  envFromSecret: grafana-azuread-secret
+
+  # ── Grafana configuration ─────────────────────────────────────────────────
+  grafana.ini:
+    server:
+      domain: grafana.caticloud.net
+      root_url: https://grafana.caticloud.net
+      serve_from_sub_path: false
+
+    analytics:
+      reporting_enabled: false
+      check_for_updates: false
+
+    # Allow both password login (for the initial admin) and SSO
+    auth:
+      disable_login_form: false
+      oauth_auto_login: false
+
+    # Microsoft Azure AD SSO
+    # Credentials come from the envFromSecret above
+    auth.azuread:
+      name: Microsoft
+      enabled: true
+      allow_sign_up: true
+      auto_login: false
+      client_id: ${AZURE_CLIENT_ID}
+      client_secret: ${AZURE_CLIENT_SECRET}
+      scopes: openid email profile
+      auth_url: https://login.microsoftonline.com/${AZURE_TENANT_ID}/oauth2/v2.0/authorize
+      token_url: https://login.microsoftonline.com/${AZURE_TENANT_ID}/oauth2/v2.0/token
+      # Leave empty to allow all Azure AD users (restrict via RBAC below)
+      allowed_domains: ""
+      allowed_groups: ""
+      # Map Azure AD group memberships to Grafana roles
+      # Group Object IDs are set here — replace with real IDs from Azure AD
+      # Format: "<group-oid>=<GrafanaRole>"
+      # role_attribute_path: "contains(groups[*], '<ADMIN_GROUP_OID>') && 'Admin' || contains(groups[*], '<EDITOR_GROUP_OID>') && 'Editor' || 'Viewer'"
+      role_attribute_strict: false
+      allow_assign_grafana_admin: true
+      skip_org_role_sync: false
+
+    # Admin credentials come from the 'grafana-admin-secret' K8s Secret
+    # (created manually — never stored in git). See bootstrap step 5b.
+    security:
+      admin_user: admin
+
+    users:
+      auto_assign_org: true
+      auto_assign_org_id: 1
+      auto_assign_org_role: Viewer
+
+    # Enable unified alerting (Grafana-managed alerts)
+    unified_alerting:
+      enabled: true
+
+    # Dashboard sidecar
+    dashboards:
+      versions_to_keep: 20
+
+  # Admin password loaded from a manually-created K8s Secret — NOT stored in git.
+  # Create before ArgoCD syncs grafana (wave 9):
+  #   kubectl create secret generic grafana-admin-secret -n monitoring \
+  #     --from-literal=admin-user=admin \
+  #     --from-literal=admin-password=<your-strong-password>
+  admin:
+    existingSecret: grafana-admin-secret
+    userKey: admin-user
+    passwordKey: admin-password
+
+  # ── Pre-configured datasources ────────────────────────────────────────────
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+
+        # Mimir — multi-tenant metrics (default org = hub tenant)
+        - name: Mimir
+          type: prometheus
+          uid: mimir
+          url: http://mimir-nginx.monitoring.svc.cluster.local:80/prometheus
+          isDefault: true
+          jsonData:
+            httpMethod: POST
+            httpHeaderName1: "X-Scope-OrgID"
+          secureJsonData:
+            httpHeaderValue1: "hub"
+
+        # Loki — multi-tenant logs
+        - name: Loki
+          type: loki
+          uid: loki
+          url: http://loki-gateway.monitoring.svc.cluster.local:80
+          jsonData:
+            httpHeaderName1: "X-Scope-OrgID"
+            # Link Loki trace_id field → Tempo
+            derivedFields:
+              - datasourceUid: tempo
+                matcherRegex: '"trace_id":\s*"([a-f0-9]+)"'
+                name: TraceID
+                url: "$${__value.raw}"
+                urlDisplayLabel: "View Trace in Tempo"
+          secureJsonData:
+            httpHeaderValue1: "hub"
+
+        # Tempo — multi-tenant traces
+        - name: Tempo
+          type: tempo
+          uid: tempo
+          url: http://tempo.monitoring.svc.cluster.local:3100
+          jsonData:
+            httpHeaderName1: "X-Scope-OrgID"
+            tracesToLogsV2:
+              datasourceUid: loki
+              filterByTraceID: true
+              filterBySpanID: false
+              customQuery: false
+            serviceMap:
+              datasourceUid: mimir
+            nodeGraph:
+              enabled: true
+          secureJsonData:
+            httpHeaderValue1: "hub"
+
+        # AlertManager — view and silence alerts
+        - name: Alertmanager
+          type: alertmanager
+          uid: alertmanager
+          url: http://alertmanager-monitoring.monitoring.svc.cluster.local:9093
+          jsonData:
+            implementation: prometheus
+
+  # ── Dashboard sidecar — auto-loads ConfigMaps labeled grafana_dashboard=1 ──
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+      folder: /var/lib/grafana/dashboards/hub
+      searchNamespace: ALL
+    datasources:
+      enabled: false   # We provision datasources via values above
+
+  # ── Ingress ───────────────────────────────────────────────────────────────
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - grafana.caticloud.net
+    tls:
+      - secretName: grafana-tls
+        hosts:
+          - grafana.caticloud.net
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod

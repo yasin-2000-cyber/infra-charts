@@ -1,0 +1,8 @@
+apiVersion: v2
+name: alertmanager
+description: Prometheus AlertManager — standalone, receives alerts from Mimir and Loki rulers
+version: 1.0.0
+dependencies:
+  - name: alertmanager
+    version: "1.13.0"
+    repository: "https://prometheus-community.github.io/helm-charts"

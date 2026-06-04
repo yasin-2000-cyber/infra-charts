@@ -1,0 +1,11 @@
+{{- if .Values.apps.metallb }}
+{{- include "app.standard" (dict
+    "name"           "metallb"
+    "wave"           "1"
+    "path"           "metallb"
+    "namespace"      "metallb-system"
+    "repoURL"        .Values.repoURL
+    "targetRevision" .Values.targetRevision
+    "clusterURL"     .Values.clusterURL
+) }}
+{{- end }}

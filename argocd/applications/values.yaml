@@ -1,0 +1,21 @@
+repoURL: https://github.com/yasin-2000-cyber/infra-charts.git
+targetRevision: HEAD
+clusterURL: https://kubernetes.default.svc
+domain: caticloud.net
+
+# Toggle individual apps on/off without deleting their manifests
+apps:
+  argocd: true
+  argocdProjects: true
+  metallb: true
+  ingressNginx: true
+  certManager: true
+  trustManager: true
+  longhorn: true
+  vault: true
+  externalSecrets: true
+  mimir: true
+  loki: true
+  tempo: true
+  grafana: true
+  alertmanager: true
