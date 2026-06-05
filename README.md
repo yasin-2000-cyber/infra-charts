@@ -39,7 +39,7 @@ Pattern: **ArgoCD App-of-Apps** → **Helm** → **Vault + External Secrets Oper
 | worker-1 | k8sw01-test | 100.64.5.52 | workloads | 8 GB | 8 | 20 GB OS + 75 GB Longhorn |
 | worker-2 | k8sw02-test | 100.64.5.53 | workloads | 8 GB | 8 | 20 GB OS + 75 GB Longhorn |
 
-**MetalLB L2 pool:** `100.65.5.70 – 100.65.5.79`
+**MetalLB L2 pool:** `100.64.5.70 – 100.64.5.79`
 
 ---
 
@@ -138,7 +138,7 @@ kubectl create secret generic vault-init-token -n vault \
   --from-literal=token=<ROOT_TOKEN_FROM_INIT_OUTPUT>
 
 # 7. After wave 6 — Populate Vault secrets (required by ExternalSecrets)
-export VAULT_ADDR=https://vault.caticloud.net
+export VAULT_ADDR=https://vault.hubtest.caticloud.net
 export VAULT_TOKEN=<ROOT_TOKEN>
 
 vault kv put secret/hub/prod/grafana-azuread \
@@ -178,14 +178,14 @@ kubectl create secret generic grafana-admin-secret -n monitoring \
 
 | Service | URL | TLS |
 |---|---|---|
-| Grafana | https://grafana.caticloud.net | Let's Encrypt |
-| ArgoCD | https://argocd.caticloud.net | Let's Encrypt |
-| Vault | https://vault.caticloud.net | Internal CA |
-| Longhorn | https://longhorn.caticloud.net | Internal CA |
-| Mimir (remote_write) | https://mimir.caticloud.net | Let's Encrypt |
-| Loki (log push) | https://loki.caticloud.net | Let's Encrypt |
-| Tempo (OTLP) | https://tempo.caticloud.net | Let's Encrypt |
-| AlertManager | https://alertmanager.caticloud.net | Let's Encrypt |
+| Grafana | https://grafana.hubtest.caticloud.net | Let's Encrypt |
+| ArgoCD | https://argocd.hubtest.caticloud.net | Let's Encrypt |
+| Vault | https://vault.hubtest.caticloud.net | Internal CA |
+| Longhorn | https://longhorn.hubtest.caticloud.net | Internal CA |
+| Mimir (remote_write) | https://mimir.hubtest.caticloud.net | Let's Encrypt |
+| Loki (log push) | https://loki.hubtest.caticloud.net | Let's Encrypt |
+| Tempo (OTLP) | https://tempo.hubtest.caticloud.net | Let's Encrypt |
+| AlertManager | https://alertmanager.hubtest.caticloud.net | Let's Encrypt |
 
 ---
 
@@ -219,12 +219,12 @@ kubectl get pods -A | grep -v Running | grep -v Completed
 kubectl get applications -n argocd
 
 # Backend health checks
-curl -k https://mimir.caticloud.net/ready
-curl -k https://loki.caticloud.net/ready
-curl -k https://tempo.caticloud.net/ready
+curl -k https://mimir.hubtest.caticloud.net/ready
+curl -k https://loki.hubtest.caticloud.net/ready
+curl -k https://tempo.hubtest.caticloud.net/ready
 
 # Grafana loads with "Sign in with Microsoft" button
-open https://grafana.caticloud.net
+open https://grafana.hubtest.caticloud.net
 
 # Vault unsealed
 vault status
