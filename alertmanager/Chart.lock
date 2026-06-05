@@ -1,0 +1,6 @@
+dependencies:
+- name: alertmanager
+  repository: file://../reference-charts/alertmanager
+  version: 1.38.1
+digest: sha256:3066f6b40bf874f3e762510bf48b221106417894f618aff5dfa0c38add97721c
+generated: "2026-06-05T23:49:01.178106107+03:00"

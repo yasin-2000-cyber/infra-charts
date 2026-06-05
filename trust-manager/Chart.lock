@@ -1,0 +1,6 @@
+dependencies:
+- name: trust-manager
+  repository: file://../reference-charts/trust-manager
+  version: v0.22.1
+digest: sha256:6376dfca56e3d7587c32b221b068ec8be1aaab7d97e0ca66ab3d3607523a6ee8
+generated: "2026-06-05T23:42:53.348212351+03:00"

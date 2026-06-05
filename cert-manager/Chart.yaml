@@ -1,8 +1,8 @@
 apiVersion: v2
 name: cert-manager
-description: cert-manager — TLS certificate automation for all hub Ingress endpoints
+description: cert-manager — TLS certificate automation
 version: 1.0.0
 dependencies:
   - name: cert-manager
-    version: "v1.17.2"
-    repository: "oci://ghcr.io/cert-manager"
+    version: "v1.20.2"
+    repository: "file://../reference-charts/cert-manager"

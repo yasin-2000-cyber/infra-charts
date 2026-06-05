@@ -1,8 +1,8 @@
 apiVersion: v2
 name: grafana
-description: Grafana — unified observability UI with Azure AD SSO and pre-configured datasources
+description: Grafana — observability UI with Azure AD SSO
 version: 1.0.0
 dependencies:
   - name: grafana
-    version: "8.4.6"
-    repository: "https://grafana.github.io/helm-charts"
+    version: "10.5.15"
+    repository: "file://../reference-charts/grafana"

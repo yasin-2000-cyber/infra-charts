@@ -1,8 +1,8 @@
 apiVersion: v2
 name: loki
-description: Grafana Loki — multi-tenant log storage hub (singleBinary mode, Longhorn backend)
+description: Grafana Loki — multi-tenant log hub (singleBinary mode)
 version: 1.0.0
 dependencies:
   - name: loki
-    version: "6.6.2"
-    repository: "https://grafana.github.io/helm-charts"
+    version: "7.0.0"
+    repository: "file://../reference-charts/loki"

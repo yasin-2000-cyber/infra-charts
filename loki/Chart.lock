@@ -1,0 +1,6 @@
+dependencies:
+- name: loki
+  repository: file://../reference-charts/loki
+  version: 7.0.0
+digest: sha256:e3d2935368581bb80c9bd2588dcffa29d0df67e4ea96081e55dbd168369d1001
+generated: "2026-06-05T23:49:12.493608483+03:00"
