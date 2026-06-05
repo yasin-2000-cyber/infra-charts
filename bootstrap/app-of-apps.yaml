@@ -20,7 +20,7 @@ spec:
     # TODO: Replace with actual GitHub repo URL once provided
     repoURL: https://github.com/yasin-2000-cyber/infra-charts.git
     targetRevision: HEAD
-    path: infra-charts/argocd/applications
+    path: argocd/applications
     helm:
       releaseName: app-of-apps
   destination:

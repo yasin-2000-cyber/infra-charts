@@ -26,7 +26,7 @@ spec:
   source:
     repoURL: {{ .repoURL }}
     targetRevision: {{ .targetRevision }}
-    path: infra-charts/{{ .path }}
+    path: {{ .path }}
     helm:
       releaseName: {{ .name }}
   destination:
