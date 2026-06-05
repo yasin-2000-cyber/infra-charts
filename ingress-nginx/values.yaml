@@ -3,10 +3,12 @@ ingress-nginx:
     ingressClassResource:
       default: true
 
+    kind: DaemonSet
+
     service:
       type: LoadBalancer
 
-    # Only on workers
+    # Only on workers — DaemonSet runs one pod per worker node
     nodeSelector:
       node-role: worker
 
