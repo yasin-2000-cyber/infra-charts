@@ -1,7 +1,7 @@
 repoURL: https://github.com/yasin-2000-cyber/infra-charts.git
 targetRevision: HEAD
 clusterURL: https://kubernetes.default.svc
-domain: caticloud.net
+domain: hubtest.caticloud.net
 
 # Toggle individual apps on/off without deleting their manifests
 apps:

@@ -1,6 +1,6 @@
 argo-cd:
   global:
-    domain: argocd.caticloud.net
+    domain: argocd.hubtest.caticloud.net
 
   # ── ArgoCD Server ─────────────────────────────────────────────────────────
   server:
@@ -8,11 +8,11 @@ argo-cd:
       enabled: true
       ingressClassName: nginx
       hosts:
-        - argocd.caticloud.net
+        - argocd.hubtest.caticloud.net
       tls:
         - secretName: argocd-tls
           hosts:
-            - argocd.caticloud.net
+            - argocd.hubtest.caticloud.net
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
         nginx.ingress.kubernetes.io/ssl-passthrough: "false"

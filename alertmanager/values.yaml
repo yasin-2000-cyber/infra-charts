@@ -84,13 +84,13 @@ alertmanager:
     enabled: true
     ingressClassName: nginx
     hosts:
-      - host: alertmanager.caticloud.net
+      - host: alertmanager.hubtest.caticloud.net
         paths:
           - path: /
             pathType: Prefix
     tls:
       - secretName: alertmanager-tls
         hosts:
-          - alertmanager.caticloud.net
+          - alertmanager.hubtest.caticloud.net
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-prod

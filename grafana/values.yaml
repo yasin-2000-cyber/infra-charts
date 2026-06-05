@@ -23,8 +23,8 @@ grafana:
   # ── Grafana configuration ─────────────────────────────────────────────────
   grafana.ini:
     server:
-      domain: grafana.caticloud.net
-      root_url: https://grafana.caticloud.net
+      domain: grafana.hubtest.caticloud.net
+      root_url: https://grafana.hubtest.caticloud.net
       serve_from_sub_path: false
 
     analytics:
@@ -165,10 +165,10 @@ grafana:
     enabled: true
     ingressClassName: nginx
     hosts:
-      - grafana.caticloud.net
+      - grafana.hubtest.caticloud.net
     tls:
       - secretName: grafana-tls
         hosts:
-          - grafana.caticloud.net
+          - grafana.hubtest.caticloud.net
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-prod

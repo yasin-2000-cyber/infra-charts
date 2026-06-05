@@ -27,7 +27,7 @@ longhorn:
 
   ingress:
     enabled: true
-    host: longhorn.caticloud.net
+    host: longhorn.hubtest.caticloud.net
     ingressClassName: nginx
     tls: true
     tlsSecret: longhorn-tls

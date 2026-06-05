@@ -34,13 +34,13 @@ vault:
       enabled: true
       ingressClassName: nginx
       hosts:
-        - host: vault.caticloud.net
+        - host: vault.hubtest.caticloud.net
           paths:
             - /
       tls:
         - secretName: vault-tls
           hosts:
-            - vault.caticloud.net
+            - vault.hubtest.caticloud.net
       annotations:
         cert-manager.io/cluster-issuer: ca-issuer
 

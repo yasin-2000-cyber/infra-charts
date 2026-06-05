@@ -144,14 +144,14 @@ mimir-distributed:
       enabled: true
       ingressClassName: nginx
       hosts:
-        - host: mimir.caticloud.net
+        - host: mimir.hubtest.caticloud.net
           paths:
             - path: /
               pathType: Prefix
       tls:
         - secretName: mimir-tls
           hosts:
-            - mimir.caticloud.net
+            - mimir.hubtest.caticloud.net
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
         nginx.ingress.kubernetes.io/proxy-body-size: "32m"

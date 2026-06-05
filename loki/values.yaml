@@ -74,14 +74,14 @@ loki:
       enabled: true
       ingressClassName: nginx
       hosts:
-        - host: loki.caticloud.net
+        - host: loki.hubtest.caticloud.net
           paths:
             - path: /
               pathType: Prefix
       tls:
         - secretName: loki-tls
           hosts:
-            - loki.caticloud.net
+            - loki.hubtest.caticloud.net
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
         # Large log payloads from spokes

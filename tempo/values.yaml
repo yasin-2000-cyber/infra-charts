@@ -51,14 +51,14 @@ ingress:
   enabled: true
   ingressClassName: nginx
   hosts:
-    - host: tempo.caticloud.net
+    - host: tempo.hubtest.caticloud.net
       paths:
         - path: /
           pathType: Prefix
   tls:
     - secretName: tempo-tls
       hosts:
-        - tempo.caticloud.net
+        - tempo.hubtest.caticloud.net
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     # gRPC requires HTTP/2
