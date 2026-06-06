@@ -16,6 +16,8 @@ mimir-distributed:
       blocks_storage:
         backend: filesystem
         filesystem:
+          dir: /data/blocks
+        tsdb:
           dir: /data/tsdb
         bucket_store:
           sync_dir: /data/tsdb-sync
@@ -135,6 +137,10 @@ mimir-distributed:
 
   # ── Disable built-in alertmanager — we have a standalone one ────────────
   alertmanager:
+    enabled: false
+
+  # ── Disable MinIO — we use filesystem backend, not S3 ───────────────────
+  minio:
     enabled: false
 
   # ── NGINX gateway — the single entry point for remote_write + queries ────
