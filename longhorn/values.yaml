@@ -1,4 +1,9 @@
 longhorn:
+  # Longhorn docs: disable preUpgradeChecker when installing via ArgoCD / GitOps
+  preUpgradeChecker:
+    jobEnabled: false
+    upgradeVersionCheck: false
+
   defaultSettings:
     # Use the mounted 75 GB data disk, not the OS disk
     defaultDataPath: /var/mnt/longhorn
