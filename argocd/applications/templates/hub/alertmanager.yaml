@@ -35,6 +35,8 @@ spec:
       jsonPointers:
         - /spec/persistentVolumeClaimRetentionPolicy
         - /spec/volumeClaimTemplates/0/status
+      managedFieldsManagers:
+        - kube-controller-manager
   syncPolicy:
     automated:
       prune: true
