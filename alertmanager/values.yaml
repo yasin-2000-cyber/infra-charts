@@ -20,9 +20,9 @@ alertmanager:
     global:
       resolve_timeout: 5m
       # SMTP — fill in your relay details or leave for Slack-only
-      smtp_from: "alertmanager@caticloud.net"
+      smtp_from: "dcalert@aau.iq"
       smtp_smarthost: "smtp.office365.com:587"
-      smtp_auth_username: "alertmanager@caticloud.net"
+      smtp_auth_username: "dcalert@aau.iq"
       smtp_auth_password: "${SMTP_PASSWORD}"
       smtp_require_tls: true
 
