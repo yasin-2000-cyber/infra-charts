@@ -13,7 +13,7 @@ spec:
   source:
     repoURL: {{ .Values.repoURL }}
     targetRevision: {{ .Values.targetRevision }}
-    path: infra-charts/vault
+    path: vault
     helm:
       releaseName: vault
   destination:
