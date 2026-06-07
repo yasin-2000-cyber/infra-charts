@@ -24,6 +24,8 @@ spec:
       kind: ExternalSecret
       jsonPointers:
         - /status
+      managedFieldsManagers:
+        - external-secrets
     - group: apps
       kind: StatefulSet
       jsonPointers:
@@ -36,4 +38,5 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      - RespectIgnoreDifferences=true
 {{- end }}

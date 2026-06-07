@@ -37,6 +37,8 @@ spec:
       kind: ExternalSecret
       jsonPointers:
         - /status
+      managedFieldsManagers:
+        - external-secrets
   syncPolicy:
     automated:
       prune: true
@@ -44,4 +46,5 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      - RespectIgnoreDifferences=true
 {{- end -}}
