@@ -1,11 +1,39 @@
 {{- if .Values.apps.alertmanager }}
-{{- include "app.standard" (dict
-    "name"           "alertmanager"
-    "wave"           "9"
-    "path"           "alertmanager"
-    "namespace"      "monitoring"
-    "repoURL"        .Values.repoURL
-    "targetRevision" .Values.targetRevision
-    "clusterURL"     .Values.clusterURL
-) }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: alertmanager
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "9"
+spec:
+  project: hub
+  source:
+    repoURL: {{ .Values.repoURL }}
+    targetRevision: {{ .Values.targetRevision }}
+    path: alertmanager
+    helm:
+      releaseName: alertmanager
+  destination:
+    server: {{ .Values.clusterURL }}
+    namespace: monitoring
+  ignoreDifferences:
+    - group: external-secrets.io
+      kind: ExternalSecret
+      jsonPointers:
+        - /status
+    - group: apps
+      kind: StatefulSet
+      jsonPointers:
+        - /spec/persistentVolumeClaimRetentionPolicy
+        - /spec/volumeClaimTemplates/0/status
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
 {{- end }}

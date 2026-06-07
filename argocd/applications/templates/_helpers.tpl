@@ -32,6 +32,11 @@ spec:
   destination:
     server: {{ .clusterURL }}
     namespace: {{ .namespace }}
+  ignoreDifferences:
+    - group: external-secrets.io
+      kind: ExternalSecret
+      jsonPointers:
+        - /status
   syncPolicy:
     automated:
       prune: true
