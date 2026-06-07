@@ -1,6 +1,0 @@
-dependencies:
-- name: argo-cd
-  repository: file://../reference-charts/argo-cd
-  version: 9.5.19
-digest: sha256:719762de7c7ec941f5b9ee9a3be43bced925dd6922cc585410a85350b3f24ea2
-generated: "2026-06-05T23:45:40.152773901+03:00"

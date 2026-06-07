@@ -1,6 +1,0 @@
-dependencies:
-- name: metallb
-  repository: file://../reference-charts/metallb
-  version: 0.16.1
-digest: sha256:dbcb795af27a7193cd14bce437584b83bd4579e9e81677ca097f2140d958e86e
-generated: "2026-06-05T23:39:30.289196741+03:00"

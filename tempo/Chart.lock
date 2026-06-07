@@ -1,6 +1,0 @@
-dependencies:
-- name: tempo
-  repository: file://../reference-charts/tempo
-  version: 1.24.4
-digest: sha256:4c9cdd5fc4f965be842eb2856ae7d05670cc094043adb5aa350b05fe55e54e19
-generated: "2026-06-05T23:46:25.038383565+03:00"

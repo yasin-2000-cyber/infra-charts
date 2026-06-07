@@ -1,8 +1,0 @@
-apiVersion: v2
-name: argo-cd
-description: ArgoCD — GitOps controller (hub, self-managed after bootstrap)
-version: 1.0.0
-dependencies:
-  - name: argo-cd
-    version: "9.5.19"
-    repository: "file://../reference-charts/argo-cd"

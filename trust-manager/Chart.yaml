@@ -1,8 +1,0 @@
-apiVersion: v2
-name: trust-manager
-description: trust-manager — CA bundle distribution across namespaces
-version: 1.0.0
-dependencies:
-  - name: trust-manager
-    version: "v0.22.1"
-    repository: "file://../reference-charts/trust-manager"

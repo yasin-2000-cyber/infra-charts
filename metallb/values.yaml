@@ -1,9 +1,0 @@
-metallb:
-  crds:
-    enabled: true
-
-  # Speaker only on workers — not on the control plane
-  speaker:
-    tolerations: []
-    nodeSelector:
-      node-role: worker

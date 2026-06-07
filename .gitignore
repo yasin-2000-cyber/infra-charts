@@ -6,6 +6,26 @@
 # **/Chart.lock
 # **/charts/*.tgz
 
+# ── Hub-only dirs — not used on spine-gitops branch ─────────────────────
+# These live on main and are managed there. Excluded here to keep the
+# spine-gitops branch focused on spoke content only.
+alertmanager/
+argo-cd/
+argocd/
+bootstrap/
+cert-manager/
+external-secrets/
+grafana/
+ingress-nginx/
+loki/
+longhorn/
+metallb/
+mimir/
+talos/
+tempo/
+trust-manager/
+vault/
+
 # ── NEVER commit these ────────────────────────────────────────────────────
 
 # Vault initialization output (contains unseal keys + root token)
