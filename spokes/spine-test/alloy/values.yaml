@@ -1,37 +1,19 @@
 alloy:
-  # Run as DaemonSet — one Alloy pod per node to tail host log paths
+  # Run as DaemonSet — one Alloy pod per node
   controller:
     type: daemonset
     tolerations:
       - operator: Exists
-    volumes:
-      extra:
-        - name: varlogpods
-          hostPath:
-            path: /var/log/pods
-        - name: varlogjournal
-          hostPath:
-            path: /var/log/journal
 
-  # Privileged required on Talos for reading host log paths
   alloy:
     securityContext:
       privileged: true
       runAsUser: 0
 
-    mounts:
-      extra:
-        - name: varlogpods
-          mountPath: /var/log/pods
-          readOnly: true
-        - name: varlogjournal
-          mountPath: /var/log/journal
-          readOnly: true
-
     configMap:
       create: true
       content: |
-        // ── LOGS: tail container logs → Loki hub ─────────────────────────────────
+        // ── LOGS: stream pod logs via K8s API → Loki hub ─────────────────────────
         discovery.kubernetes "pods" {
           role = "pod"
         }
@@ -39,12 +21,6 @@ alloy:
         discovery.relabel "pod_logs" {
           targets = discovery.kubernetes.pods.targets
 
-          rule {
-            source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
-            separator     = "/"
-            target_label  = "__path__"
-            replacement   = "/var/log/pods/*$1/*.log"
-          }
           rule {
             source_labels = ["__meta_kubernetes_namespace"]
             target_label  = "namespace"
@@ -63,7 +39,7 @@ alloy:
           }
         }
 
-        loki.source.file "pods" {
+        loki.source.kubernetes "pods" {
           targets    = discovery.relabel.pod_logs.output
           forward_to = [loki.write.hub.receiver]
         }
