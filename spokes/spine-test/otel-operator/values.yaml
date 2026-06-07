@@ -13,16 +13,3 @@ opentelemetry-operator:
         cpu: 200m
         memory: 128Mi
 
-  # Default Instrumentation CR — auto-inject into namespaces with annotation
-  # instrumentation.opentelemetry.io/inject-<language>: "true"
-  # OTLP endpoint points to Alloy running on the same node (DaemonSet)
-  instrumentationSpec:
-    exporter:
-      endpoint: http://$(ALLOY_HOST_IP):4317
-    propagators:
-      - tracecontext
-      - baggage
-      - b3
-    sampler:
-      type: parentbased_traceidratio
-      argument: "1.0"
