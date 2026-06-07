@@ -1,11 +1,50 @@
 {{- if .Values.apps.longhorn }}
-{{- include "app.standard" (dict
-    "name"           "longhorn"
-    "wave"           "4"
-    "path"           "longhorn"
-    "namespace"      "longhorn-system"
-    "repoURL"        .Values.repoURL
-    "targetRevision" .Values.targetRevision
-    "clusterURL"     .Values.clusterURL
-) }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  project: hub
+  source:
+    repoURL: {{ .Values.repoURL }}
+    targetRevision: {{ .Values.targetRevision }}
+    path: longhorn
+    helm:
+      releaseName: longhorn
+  destination:
+    server: {{ .Values.clusterURL }}
+    namespace: longhorn-system
+  ignoreDifferences:
+    - group: external-secrets.io
+      kind: ExternalSecret
+      jsonPointers:
+        - /status
+        - /metadata/finalizers
+        - /spec/data
+    - group: external-secrets.io
+      kind: ExternalSecret
+      managedFieldsManagers:
+        - external-secrets
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      jsonPointers:
+        - /status
+        - /spec/conversion
+        - /spec/preserveUnknownFields
+      managedFieldsManagers:
+        - longhorn-manager
+        - Go-http-client
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
 {{- end }}
