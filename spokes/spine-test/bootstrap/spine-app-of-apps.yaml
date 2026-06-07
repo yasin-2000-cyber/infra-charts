@@ -12,7 +12,7 @@ metadata:
   name: spine-test-apps
   namespace: argocd
 spec:
-  project: spine
+  project: hub
   source:
     repoURL: https://github.com/yasin-2000-cyber/infra-charts.git
     targetRevision: spine-gitops

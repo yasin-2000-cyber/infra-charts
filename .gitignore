@@ -9,22 +9,24 @@
 # ── Hub-only dirs — not used on spine-gitops branch ─────────────────────
 # These live on main and are managed there. Excluded here to keep the
 # spine-gitops branch focused on spoke content only.
-alertmanager/
-argo-cd/
-argocd/
-bootstrap/
-cert-manager/
-external-secrets/
-grafana/
-ingress-nginx/
-loki/
-longhorn/
-metallb/
-mimir/
-talos/
-tempo/
-trust-manager/
-vault/
+# Leading / anchors patterns to repo root so they don't accidentally match
+# same-named dirs inside spokes/ (e.g. spokes/spine-test/metallb/).
+/alertmanager/
+/argo-cd/
+/argocd/
+/bootstrap/
+/cert-manager/
+/external-secrets/
+/grafana/
+/ingress-nginx/
+/loki/
+/longhorn/
+/metallb/
+/mimir/
+/talos/
+/tempo/
+/trust-manager/
+/vault/
 
 # ── NEVER commit these ────────────────────────────────────────────────────
 
