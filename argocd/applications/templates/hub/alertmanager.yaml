@@ -35,6 +35,8 @@ spec:
       jsonPointers:
         - /spec/persistentVolumeClaimRetentionPolicy
         - /spec/volumeClaimTemplates/0/status
+    - group: apps
+      kind: StatefulSet
       managedFieldsManagers:
         - kube-controller-manager
   syncPolicy:
