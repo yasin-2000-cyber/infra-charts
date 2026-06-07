@@ -1,0 +1,35 @@
+{{- if .Values.apps.spineTest }}
+# spine-test-apps watches the spine-gitops branch and renders the 7 spoke
+# Application CRDs (metallb, ingress-nginx, cert-manager, alloy, kube-state-metrics,
+# node-exporter, otel-operator) that deploy to the spine-test cluster.
+#
+# Uses project: hub because its destination is the hub cluster's argocd namespace
+# (it just places ArgoCD Application objects there). The generated spoke Applications
+# themselves use project: spine and deploy to https://100.64.5.61:6443.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: spine-test-apps
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: hub
+  source:
+    repoURL: {{ .Values.repoURL }}
+    targetRevision: spine-gitops
+    path: spokes/spine-test/argocd/applications
+    helm:
+      releaseName: spine-test-apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+{{- end }}

@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: spine
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Spine spoke clusters — observability agent stack
+
+  sourceRepos:
+    - https://github.com/yasin-2000-cyber/infra-charts.git
+    - oci://ghcr.io/metallb
+    - oci://ghcr.io/ingress-nginx
+    - oci://ghcr.io/cert-manager
+    - https://grafana.github.io/helm-charts
+    - https://prometheus-community.github.io/helm-charts
+    - https://charts.jetstack.io
+    - https://open-telemetry.github.io/opentelemetry-helm-charts
+
+  destinations:
+    - server: https://100.64.5.61:6443
+      namespace: "*"
+
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+  roles:
+    - name: devops
+      description: Full access to spine infrastructure
+      policies:
+        - p, proj:spine:devops, applications, *, spine/*, allow
+      groups:
+        - devops

@@ -19,3 +19,4 @@ apps:
   tempo: true
   grafana: true
   alertmanager: true
+  spineTest: true
