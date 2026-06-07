@@ -4,6 +4,14 @@ alloy:
     type: daemonset
     tolerations:
       - operator: Exists
+    volumes:
+      extra:
+        - name: varlogpods
+          hostPath:
+            path: /var/log/pods
+        - name: varlogjournal
+          hostPath:
+            path: /var/log/journal
 
   # Privileged required on Talos for reading host log paths
   alloy:
@@ -11,22 +19,14 @@ alloy:
       privileged: true
       runAsUser: 0
 
-    # Mount host log directories
-    extraVolumes:
-      - name: varlogpods
-        hostPath:
-          path: /var/log/pods
-      - name: varlogjournal
-        hostPath:
-          path: /var/log/journal
-
-    extraVolumeMounts:
-      - name: varlogpods
-        mountPath: /var/log/pods
-        readOnly: true
-      - name: varlogjournal
-        mountPath: /var/log/journal
-        readOnly: true
+    mounts:
+      extra:
+        - name: varlogpods
+          mountPath: /var/log/pods
+          readOnly: true
+        - name: varlogjournal
+          mountPath: /var/log/journal
+          readOnly: true
 
     configMap:
       create: true
