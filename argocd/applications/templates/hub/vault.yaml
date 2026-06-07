@@ -19,13 +19,25 @@ spec:
   destination:
     server: {{ .Values.clusterURL }}
     namespace: vault
-  # Vault StatefulSet mutates itself at runtime — ignore these fields
   ignoreDifferences:
+    - group: external-secrets.io
+      kind: ExternalSecret
+      jsonPointers:
+        - /status
+        - /metadata/finalizers
+        - /spec/data
+    - group: external-secrets.io
+      kind: ExternalSecret
+      managedFieldsManagers:
+        - external-secrets
     - group: apps
       kind: StatefulSet
       jsonPointers:
+        - /spec/updateStrategy
         - /spec/persistentVolumeClaimRetentionPolicy
-        - /spec/volumeClaimTemplates/0/status
+        - /spec/volumeClaimTemplates
+      managedFieldsManagers:
+        - kube-controller-manager
     - group: admissionregistration.k8s.io
       kind: MutatingWebhookConfiguration
       jsonPointers:
@@ -39,5 +51,5 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
 {{- end }}
