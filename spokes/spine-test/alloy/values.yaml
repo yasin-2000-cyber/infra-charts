@@ -74,6 +74,9 @@ alloy:
             headers = {
               "X-Scope-OrgID" = "spine-test",
             }
+            tls_config {
+              insecure_skip_verify = true
+            }
           }
           external_labels = {
             cluster    = "spine-test",
@@ -127,6 +130,9 @@ alloy:
             headers = {
               "X-Scope-OrgID" = "spine-test",
             }
+            tls_config {
+              insecure_skip_verify = true
+            }
           }
           external_labels = {
             cluster    = "spine-test",
@@ -152,6 +158,9 @@ alloy:
             endpoint = "tempo.hubtest.caticloud.net:4317"
             headers = {
               "X-Scope-OrgID" = "spine-test",
+            }
+            tls {
+              insecure_skip_verify = true
             }
           }
         }
