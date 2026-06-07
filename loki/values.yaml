@@ -19,6 +19,10 @@ loki:
   # All storage on local filesystem (Longhorn PVC) — no S3 for test cluster
   storage:
     type: filesystem
+    bucketNames:
+      chunks: chunks
+      ruler: ruler
+      admin: admin
 
   # Ruler (for LogQL alerting rules)
   rulerConfig:

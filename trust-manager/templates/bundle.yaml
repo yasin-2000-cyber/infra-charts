@@ -10,7 +10,6 @@ spec:
     - secret:
         name: selfsigned-ca-secret
         key: ca.crt
-      namespace: cert-manager
   target:
     configMap:
       key: ca-bundle.crt
