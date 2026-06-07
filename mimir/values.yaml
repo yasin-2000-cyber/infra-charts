@@ -39,6 +39,15 @@ mimir-distributed:
         filesystem:
           dir: /data/alertmanager
 
+      ingester_client:
+        grpc_client_config:
+          grpc_compression: snappy
+
+      # Single ingester — set RF=1 so writes don't require quorum
+      ingester:
+        ring:
+          replication_factor: 1
+
       # Limits — conservative for 8 GB/worker test cluster
       limits:
         ingestion_rate: 10000
