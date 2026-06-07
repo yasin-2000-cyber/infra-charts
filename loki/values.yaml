@@ -83,6 +83,6 @@ loki:
           hosts:
             - loki.hubtest.caticloud.net
       annotations:
-        cert-manager.io/cluster-issuer: letsencrypt-prod
+        cert-manager.io/cluster-issuer: ca-issuer
         # Large log payloads from spokes
         nginx.ingress.kubernetes.io/proxy-body-size: "32m"

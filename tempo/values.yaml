@@ -60,7 +60,7 @@ ingress:
       hosts:
         - tempo.hubtest.caticloud.net
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+    cert-manager.io/cluster-issuer: ca-issuer
     # gRPC requires HTTP/2
     nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
     nginx.ingress.kubernetes.io/proxy-body-size: "32m"
