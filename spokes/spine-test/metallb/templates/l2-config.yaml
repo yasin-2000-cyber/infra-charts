@@ -1,0 +1,21 @@
+# MetalLB Layer 2 IP pool — spine-test cluster node network: 100.64.5.0/24
+# Nodes: master 100.64.5.61, worker1 100.64.5.62, worker2 100.64.5.63
+# VIP:   100.64.5.64 (single IP for ingress-nginx LoadBalancer)
+---
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: spine-test-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 100.64.5.64-100.64.5.64
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: spine-test-l2
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+    - spine-test-pool

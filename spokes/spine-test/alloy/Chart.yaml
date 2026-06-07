@@ -1,0 +1,8 @@
+apiVersion: v2
+name: alloy
+description: Grafana Alloy — unified log/metrics/trace collector for spine-test spoke
+version: 1.0.0
+dependencies:
+  - name: alloy
+    version: "0.12.5"
+    repository: "https://grafana.github.io/helm-charts"

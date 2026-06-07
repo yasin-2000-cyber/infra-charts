@@ -1,0 +1,26 @@
+ingress-nginx:
+  controller:
+    ingressClassResource:
+      default: true
+
+    kind: DaemonSet
+
+    service:
+      type: LoadBalancer
+
+    # Only on workers
+    nodeSelector:
+      node-role: worker
+
+    config:
+      use-forwarded-headers: "true"
+      proxy-real-ip-cidr: "100.64.5.0/24"
+      http2: "true"
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi

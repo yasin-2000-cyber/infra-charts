@@ -1,0 +1,33 @@
+# Talos Machine Config Patch — Spine-Test Worker Nodes
+# Apply with:
+#   talosctl machineconfig patch spokes/spine-test/talos/generated/worker.yaml \
+#     --patch @spokes/spine-test/talos/patches/worker-patch.yaml \
+#     --output spokes/spine-test/talos/generated/patched-worker.yaml
+#
+# Hardware: 8 vCPU, 8 GB RAM, 20 GB OS disk (no data disk — no Longhorn on spoke)
+# Role: Observability agent workloads (Alloy, kube-state-metrics, node-exporter, OTel Operator)
+
+machine:
+  kernel:
+    modules:
+      - name: br_netfilter
+      - name: ip_vs
+      - name: ip_vs_rr
+      - name: ip_vs_wrr
+      - name: ip_vs_sh
+      - name: nf_conntrack
+      # iscsi_tcp and dm_crypt are intentionally omitted — no Longhorn on this spoke
+
+  sysctls:
+    net.bridge.bridge-nf-call-iptables: "1"
+    net.bridge.bridge-nf-call-ip6tables: "1"
+    net.ipv4.ip_forward: "1"
+    # MetalLB L2 mode requirements
+    net.ipv4.conf.all.arp_filter: "1"
+    net.ipv4.conf.all.arp_announce: "2"
+    net.ipv4.conf.all.arp_ignore: "1"
+
+  # No disks block — no Longhorn data disk on spoke
+
+  nodeLabels:
+    node-role: worker

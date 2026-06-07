@@ -1,0 +1,11 @@
+{{- if .Values.apps.metallb }}
+{{- include "spine.app" (dict
+    "name"            "metallb"
+    "wave"            "1"
+    "path"            "spokes/spine-test/metallb"
+    "namespace"       "metallb-system"
+    "repoURL"         .Values.repoURL
+    "targetRevision"  .Values.targetRevision
+    "clusterURL"      .Values.clusterURL
+) }}
+{{- end }}

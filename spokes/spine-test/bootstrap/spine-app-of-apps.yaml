@@ -1,0 +1,30 @@
+# Spine-Test App-of-Apps — apply this ONCE on the hub cluster after:
+#   1. Talos spine-test cluster is provisioned and kubeconfig retrieved
+#   2. Cluster registered: argocd cluster add k8sm01-spine-test --kubeconfig ... --name spine-test
+#   3. AppProject applied: kubectl apply -f spokes/spine-test/argocd/projects/spine.yaml
+#   4. kubectl apply -f spokes/spine-test/bootstrap/spine-app-of-apps.yaml
+#
+# Hub ArgoCD then watches the spine-gitops branch and manages the spine-test cluster.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: spine-test-apps
+  namespace: argocd
+spec:
+  project: spine
+  source:
+    repoURL: https://github.com/yasin-2000-cyber/infra-charts.git
+    targetRevision: spine-gitops
+    path: spokes/spine-test/argocd/applications
+    helm:
+      releaseName: spine-test-apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -15,6 +15,7 @@ vault-init-output.json
 
 # Talos-generated cluster configs (contain machine secrets / cluster CA)
 talos/generated/
+spokes/*/talos/generated/
 *.talosconfig
 
 # Kubeconfig

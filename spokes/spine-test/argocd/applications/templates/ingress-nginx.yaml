@@ -1,0 +1,11 @@
+{{- if .Values.apps.ingressNginx }}
+{{- include "spine.app" (dict
+    "name"            "ingress-nginx"
+    "wave"            "2"
+    "path"            "spokes/spine-test/ingress-nginx"
+    "namespace"       "ingress-nginx"
+    "repoURL"         .Values.repoURL
+    "targetRevision"  .Values.targetRevision
+    "clusterURL"      .Values.clusterURL
+) }}
+{{- end }}

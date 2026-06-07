@@ -1,0 +1,8 @@
+apiVersion: v2
+name: ingress-nginx
+description: NGINX Ingress Controller — URL access to test apps at *.spine01.caticloud.net
+version: 1.0.0
+dependencies:
+  - name: ingress-nginx
+    version: "4.15.1"
+    repository: "file://../../../reference-charts/ingress-nginx"

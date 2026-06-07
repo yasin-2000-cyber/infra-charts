@@ -1,0 +1,19 @@
+prometheus-node-exporter:
+  # Run on all nodes including control-plane
+  tolerations:
+    - operator: Exists
+
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9100"
+
+  # hostPID required for reading process info
+  hostPID: true
+
+  resources:
+    requests:
+      cpu: 20m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi

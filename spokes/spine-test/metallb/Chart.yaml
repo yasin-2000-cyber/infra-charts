@@ -1,0 +1,8 @@
+apiVersion: v2
+name: metallb
+description: MetalLB — L2 LoadBalancer for NGINX Ingress (spine-test spoke)
+version: 1.0.0
+dependencies:
+  - name: metallb
+    version: "0.16.1"
+    repository: "file://../../../reference-charts/metallb"

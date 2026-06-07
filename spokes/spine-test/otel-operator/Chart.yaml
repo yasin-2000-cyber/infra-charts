@@ -1,0 +1,8 @@
+apiVersion: v2
+name: otel-operator
+description: OpenTelemetry Operator — auto-instrumentation webhook for spine-test spoke
+version: 1.0.0
+dependencies:
+  - name: opentelemetry-operator
+    version: "0.76.1"
+    repository: "https://open-telemetry.github.io/opentelemetry-helm-charts"

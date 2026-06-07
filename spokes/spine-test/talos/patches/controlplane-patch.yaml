@@ -1,0 +1,29 @@
+# Talos Machine Config Patch — Spine-Test Control Plane Node
+# Apply with:
+#   talosctl machineconfig patch spokes/spine-test/talos/generated/controlplane.yaml \
+#     --patch @spokes/spine-test/talos/patches/controlplane-patch.yaml \
+#     --output spokes/spine-test/talos/generated/patched-controlplane.yaml
+#
+# Hardware: 4 vCPU, 4 GB RAM, 20 GB OS disk (no data disk)
+# Role: K8s control-plane only — no workloads scheduled here
+
+machine:
+  kernel:
+    modules:
+      - name: br_netfilter
+      - name: ip_vs
+      - name: ip_vs_rr
+      - name: ip_vs_wrr
+      - name: ip_vs_sh
+      - name: nf_conntrack
+
+  sysctls:
+    net.bridge.bridge-nf-call-iptables: "1"
+    net.bridge.bridge-nf-call-ip6tables: "1"
+    net.ipv4.ip_forward: "1"
+
+  nodeLabels:
+    node-role: control-plane
+
+cluster:
+  allowSchedulingOnControlPlanes: false

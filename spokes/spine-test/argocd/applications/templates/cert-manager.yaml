@@ -1,0 +1,11 @@
+{{- if .Values.apps.certManager }}
+{{- include "spine.app" (dict
+    "name"            "cert-manager"
+    "wave"            "3"
+    "path"            "spokes/spine-test/cert-manager"
+    "namespace"       "cert-manager"
+    "repoURL"         .Values.repoURL
+    "targetRevision"  .Values.targetRevision
+    "clusterURL"      .Values.clusterURL
+) }}
+{{- end }}

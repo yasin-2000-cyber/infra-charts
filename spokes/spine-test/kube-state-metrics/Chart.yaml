@@ -1,0 +1,8 @@
+apiVersion: v2
+name: kube-state-metrics
+description: kube-state-metrics — K8s object state metrics for spine-test spoke
+version: 1.0.0
+dependencies:
+  - name: kube-state-metrics
+    version: "5.36.0"
+    repository: "https://prometheus-community.github.io/helm-charts"

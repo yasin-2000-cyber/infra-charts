@@ -1,0 +1,11 @@
+{{- if .Values.apps.alloy }}
+{{- include "spine.app" (dict
+    "name"            "alloy"
+    "wave"            "4"
+    "path"            "spokes/spine-test/alloy"
+    "namespace"       "monitoring"
+    "repoURL"         .Values.repoURL
+    "targetRevision"  .Values.targetRevision
+    "clusterURL"      .Values.clusterURL
+) }}
+{{- end }}

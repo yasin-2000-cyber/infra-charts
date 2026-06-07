@@ -1,0 +1,11 @@
+{{- if .Values.apps.otelOperator }}
+{{- include "spine.app" (dict
+    "name"            "otel-operator"
+    "wave"            "5"
+    "path"            "spokes/spine-test/otel-operator"
+    "namespace"       "opentelemetry-operator-system"
+    "repoURL"         .Values.repoURL
+    "targetRevision"  .Values.targetRevision
+    "clusterURL"      .Values.clusterURL
+) }}
+{{- end }}

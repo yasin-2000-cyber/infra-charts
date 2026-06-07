@@ -1,0 +1,8 @@
+metallb:
+  crds:
+    enabled: true
+
+  speaker:
+    tolerations: []
+    nodeSelector:
+      node-role: worker
