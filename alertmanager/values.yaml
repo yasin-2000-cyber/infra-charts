@@ -31,39 +31,25 @@ alertmanager:
       group_wait: 30s
       group_interval: 5m
       repeat_interval: 4h
-      receiver: "slack-default"
+      receiver: "email-default"
       routes:
-        # Critical alerts — immediate Slack notification
         - match:
             severity: critical
-          receiver: "slack-critical"
+          receiver: "email-critical"
           continue: true
-        # Warning alerts — batched Slack notification
         - match:
             severity: warning
-          receiver: "slack-default"
+          receiver: "email-default"
 
     receivers:
-      - name: "slack-default"
-        slack_configs:
-          - api_url: "${SLACK_WEBHOOK_URL}"
-            channel: "#alerts"
-            title: '[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}'
-            text: |
-              *Cluster:* {{ .CommonLabels.cluster | default "unknown" }}
-              *Namespace:* {{ .CommonLabels.namespace | default "unknown" }}
-              {{ range .Alerts }}
-              *Alert:* {{ .Labels.alertname }}
-              *Summary:* {{ .Annotations.summary }}
-              *Description:* {{ .Annotations.description }}
-              {{ end }}
+      - name: "email-default"
+        email_configs:
+          - to: "dcalert@aau.iq"
             send_resolved: true
 
-      - name: "slack-critical"
-        slack_configs:
-          - api_url: "${SLACK_WEBHOOK_URL}"
-            channel: "#alerts-critical"
-            title: '🔴 CRITICAL: {{ .CommonLabels.alertname }} on {{ .CommonLabels.cluster }}'
+      - name: "email-critical"
+        email_configs:
+          - to: "dcalert@aau.iq"
             send_resolved: true
 
     inhibit_rules:
