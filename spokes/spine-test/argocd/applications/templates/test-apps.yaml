@@ -1,0 +1,29 @@
+{{- if .Values.apps.testApps }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: spine-test-test-apps
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "7"
+spec:
+  project: spine
+  source:
+    repoURL: {{ .Values.repoURL }}
+    targetRevision: {{ .Values.targetRevision }}
+    path: spokes/spine-test/test-apps
+    directory:
+      recurse: false
+  destination:
+    server: {{ .Values.clusterURL }}
+    namespace: test-apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}

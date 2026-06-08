@@ -41,7 +41,25 @@ alloy:
 
         loki.source.kubernetes "pods" {
           targets    = discovery.relabel.pod_logs.output
+          forward_to = [loki.process.extract_trace_id.receiver]
+        }
+
+        loki.process "extract_trace_id" {
           forward_to = [loki.write.hub.receiver]
+
+          // Extract trace_id from JSON log lines and attach as structured metadata
+          // so Grafana can link log entries to Tempo traces without label cardinality blowup
+          stage.json {
+            expressions = {
+              trace_id = "trace_id",
+            }
+          }
+
+          stage.structured_metadata {
+            values = {
+              trace_id = "trace_id",
+            }
+          }
         }
 
         loki.write "hub" {
@@ -141,13 +159,24 @@ alloy:
           }
         }
 
+    # Expose OTLP receiver ports so instrumented pods can reach Alloy via ClusterIP service
+    extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP
+      - name: otlp-http
+        port: 4318
+        targetPort: 4318
+        protocol: TCP
+
   serviceAccount:
     create: true
 
   rbac:
     create: true
 
-  # Expose OTLP ports so instrumented pods can reach Alloy on the node
   service:
     enabled: true
-    portName: otlp-grpc
+    # Route each pod to the Alloy instance on its own node (DaemonSet locality)
+    internalTrafficPolicy: Local

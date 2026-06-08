@@ -11,3 +11,5 @@ apps:
   kubeStateMetrics: true
   nodeExporter: true
   otelOperator: true
+  otelInstrumentation: true
+  testApps: true

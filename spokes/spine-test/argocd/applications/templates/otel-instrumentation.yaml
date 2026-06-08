@@ -1,0 +1,11 @@
+{{- if .Values.apps.otelInstrumentation }}
+{{- include "spine.app" (dict
+    "name"            "otel-instrumentation"
+    "wave"            "6"
+    "path"            "spokes/spine-test/otel-instrumentation"
+    "namespace"       "test-apps"
+    "repoURL"         .Values.repoURL
+    "targetRevision"  .Values.targetRevision
+    "clusterURL"      .Values.clusterURL
+) }}
+{{- end }}
