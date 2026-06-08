@@ -21,7 +21,7 @@ spec:
             - traces
             - --otlp-endpoint=alloy.monitoring.svc.cluster.local:4317
             - --otlp-insecure
-            - --duration=86400
+            - --duration=24h
             - --rate=1
           resources:
             requests:
