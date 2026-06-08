@@ -1,4 +1,8 @@
 grafana:
+  # RWO PVC requires Recreate to avoid Multi-Attach deadlock during rolling updates
+  deploymentStrategy:
+    type: Recreate
+
   # ── Persistence ───────────────────────────────────────────────────────────
   persistence:
     enabled: true
