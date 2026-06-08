@@ -3,6 +3,9 @@ loki:
   loki:
     auth_enabled: true    # multi-tenancy via X-Scope-OrgID header
 
+    querier:
+      multi_tenant_queries_enabled: true
+
     commonConfig:
       replication_factor: 1   # single binary — no ring replication
 
