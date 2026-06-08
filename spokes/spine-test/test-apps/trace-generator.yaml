@@ -23,7 +23,6 @@ spec:
             - --otlp-insecure
             - --duration=0
             - --rate=1
-            - --otlp-header=X-Scope-OrgID=spine-test
           env:
             - name: NODE_IP
               valueFrom:
