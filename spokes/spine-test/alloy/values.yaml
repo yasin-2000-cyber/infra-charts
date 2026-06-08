@@ -149,7 +149,7 @@ alloy:
 
         otelcol.exporter.otlp "hub" {
           client {
-            endpoint = "tempo.hubtest.caticloud.net:4317"
+            endpoint = "tempo.hubtest.caticloud.net:443"
             headers = {
               "X-Scope-OrgID" = "spine-test",
             }
