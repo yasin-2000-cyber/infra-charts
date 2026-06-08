@@ -93,7 +93,7 @@ grafana:
       apiVersion: 1
       datasources:
 
-        # Mimir — multi-tenant metrics (default org = hub tenant)
+        # Mimir — multi-tenant metrics (hub + spoke tenants, pipe-separated)
         - name: Mimir
           type: prometheus
           uid: mimir
@@ -103,9 +103,9 @@ grafana:
             httpMethod: POST
             httpHeaderName1: "X-Scope-OrgID"
           secureJsonData:
-            httpHeaderValue1: "hub"
+            httpHeaderValue1: "hub|spine-test"
 
-        # Loki — multi-tenant logs
+        # Loki — multi-tenant logs (hub + spoke tenants, pipe-separated)
         - name: Loki
           type: loki
           uid: loki
@@ -120,9 +120,9 @@ grafana:
                 url: "$${__value.raw}"
                 urlDisplayLabel: "View Trace in Tempo"
           secureJsonData:
-            httpHeaderValue1: "hub"
+            httpHeaderValue1: "hub|spine-test"
 
-        # Tempo — multi-tenant traces
+        # Tempo — multi-tenant traces (hub + spoke tenants, pipe-separated)
         - name: Tempo
           type: tempo
           uid: tempo
@@ -139,7 +139,7 @@ grafana:
             nodeGraph:
               enabled: true
           secureJsonData:
-            httpHeaderValue1: "hub"
+            httpHeaderValue1: "hub|spine-test"
 
         # AlertManager — view and silence alerts
         - name: Alertmanager
