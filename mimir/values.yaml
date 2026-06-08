@@ -8,8 +8,8 @@ mimir-distributed:
     structuredConfig:
       multitenancy_enabled: true
 
-      querier:
-        multi_tenant_queries_enabled: true
+      tenant_federation:
+        enabled: true
 
       # All data on local filesystem (Longhorn PVC) — no S3 for test cluster
       common:
