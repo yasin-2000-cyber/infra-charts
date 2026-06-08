@@ -19,15 +19,10 @@ spec:
           image: ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:v0.127.0
           args:
             - traces
-            - --otlp-endpoint=$(NODE_IP):4317
+            - --otlp-endpoint=alloy.monitoring.svc.cluster.local:4317
             - --otlp-insecure
             - --duration=0
             - --rate=1
-          env:
-            - name: NODE_IP
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.hostIP
           resources:
             requests:
               cpu: 10m
