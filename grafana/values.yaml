@@ -134,6 +134,17 @@ grafana:
               filterByTraceID: true
               filterBySpanID: false
               customQuery: false
+              # Fetch logs ±1 minute around the trace span time
+              spanStartTimeShift: "-1m"
+              spanEndTimeShift: "1m"
+              # Map OTel resource attributes (injected by OTel Operator) to Loki labels
+              tags:
+                - key: k8s.namespace.name
+                  value: namespace
+                - key: k8s.pod.name
+                  value: pod
+                - key: service.name
+                  value: app
             serviceMap:
               datasourceUid: mimir
             nodeGraph:
