@@ -268,8 +268,8 @@ grafana:
               labels:
                 severity: critical
               annotations:
-                summary: "Node {{ $labels.instance }} is down"
-                description: "Node exporter on {{ $labels.instance }} has been unreachable for more than 2 minutes."
+                summary: 'Node {{ "{{" }} $labels.instance {{ "}}" }} is down'
+                description: 'Node exporter on {{ "{{" }} $labels.instance {{ "}}" }} has been unreachable for more than 2 minutes.'
               isPaused: false
 
             - uid: infra-node-not-ready
@@ -319,8 +319,8 @@ grafana:
               labels:
                 severity: critical
               annotations:
-                summary: "Node {{ $labels.node }} is NotReady"
-                description: "Kubernetes node {{ $labels.node }} has been in NotReady state for more than 2 minutes."
+                summary: 'Node {{ "{{" }} $labels.node {{ "}}" }} is NotReady'
+                description: 'Kubernetes node {{ "{{" }} $labels.node {{ "}}" }} has been in NotReady state for more than 2 minutes.'
               isPaused: false
 
             # ── Pod alerts ───────────────────────────────────────────────
@@ -371,8 +371,8 @@ grafana:
               labels:
                 severity: warning
               annotations:
-                summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash-looping"
-                description: "Container {{ $labels.container }} in pod {{ $labels.namespace }}/{{ $labels.pod }} is restarting continuously."
+                summary: 'Pod {{ "{{" }} $labels.namespace {{ "}}" }}/{{ "{{" }} $labels.pod {{ "}}" }} is crash-looping'
+                description: 'Container {{ "{{" }} $labels.container {{ "}}" }} in pod {{ "{{" }} $labels.namespace {{ "}}" }}/{{ "{{" }} $labels.pod {{ "}}" }} is restarting continuously.'
               isPaused: false
 
             # ── CPU alerts ───────────────────────────────────────────────
@@ -423,8 +423,8 @@ grafana:
               labels:
                 severity: warning
               annotations:
-                summary: "High CPU usage on {{ $labels.instance }}"
-                description: "CPU usage on {{ $labels.instance }} has been above 80% for more than 10 minutes."
+                summary: 'High CPU usage on {{ "{{" }} $labels.instance {{ "}}" }}'
+                description: 'CPU usage on {{ "{{" }} $labels.instance {{ "}}" }} has been above 80% for more than 10 minutes.'
               isPaused: false
 
             - uid: infra-high-cpu-critical
@@ -474,8 +474,8 @@ grafana:
               labels:
                 severity: critical
               annotations:
-                summary: "Critical CPU usage on {{ $labels.instance }}"
-                description: "CPU usage on {{ $labels.instance }} has been above 90% for more than 5 minutes."
+                summary: 'Critical CPU usage on {{ "{{" }} $labels.instance {{ "}}" }}'
+                description: 'CPU usage on {{ "{{" }} $labels.instance {{ "}}" }} has been above 90% for more than 5 minutes.'
               isPaused: false
 
             # ── Memory alerts ────────────────────────────────────────────
@@ -526,8 +526,8 @@ grafana:
               labels:
                 severity: warning
               annotations:
-                summary: "High memory usage on {{ $labels.instance }}"
-                description: "Memory usage on {{ $labels.instance }} has been above 85% for more than 5 minutes."
+                summary: 'High memory usage on {{ "{{" }} $labels.instance {{ "}}" }}'
+                description: 'Memory usage on {{ "{{" }} $labels.instance {{ "}}" }} has been above 85% for more than 5 minutes.'
               isPaused: false
 
             # ── PVC alerts ───────────────────────────────────────────────
@@ -578,8 +578,8 @@ grafana:
               labels:
                 severity: warning
               annotations:
-                summary: "PVC {{ $labels.persistentvolumeclaim }} is nearly full"
-                description: "PVC {{ $labels.persistentvolumeclaim }} in namespace {{ $labels.namespace }} is more than 80% full."
+                summary: 'PVC {{ "{{" }} $labels.persistentvolumeclaim {{ "}}" }} is nearly full'
+                description: 'PVC {{ "{{" }} $labels.persistentvolumeclaim {{ "}}" }} in namespace {{ "{{" }} $labels.namespace {{ "}}" }} is more than 80% full.'
               isPaused: false
 
             - uid: infra-pvc-full
@@ -629,8 +629,8 @@ grafana:
               labels:
                 severity: critical
               annotations:
-                summary: "PVC {{ $labels.persistentvolumeclaim }} is critically full"
-                description: "PVC {{ $labels.persistentvolumeclaim }} in namespace {{ $labels.namespace }} is more than 95% full."
+                summary: 'PVC {{ "{{" }} $labels.persistentvolumeclaim {{ "}}" }} is critically full'
+                description: 'PVC {{ "{{" }} $labels.persistentvolumeclaim {{ "}}" }} in namespace {{ "{{" }} $labels.namespace {{ "}}" }} is more than 95% full.'
               isPaused: false
 
   # ── Dashboard Library (provisioned from grafana.com at startup) ───────────
