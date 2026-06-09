@@ -9,6 +9,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "9"
 spec:
+  revisionHistoryLimit: 2
   project: hub
   source:
     repoURL: {{ .Values.repoURL }}

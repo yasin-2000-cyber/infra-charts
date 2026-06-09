@@ -15,6 +15,7 @@ metadata:
   name: app-of-apps
   namespace: argocd
 spec:
+  revisionHistoryLimit: 2
   project: hub
   source:
     # TODO: Replace with actual GitHub repo URL once provided
