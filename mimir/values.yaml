@@ -33,7 +33,6 @@ mimir-distributed:
       # Compactor and ruler local data dirs must not overlap with blocks_storage.filesystem.dir
       compactor:
         data_dir: /data/compactor
-        retention_enabled: true
 
       ruler:
         rule_path: /data/ruler-rules
