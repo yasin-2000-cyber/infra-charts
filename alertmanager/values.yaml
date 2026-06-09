@@ -61,9 +61,13 @@ alertmanager:
         equal: ["alertname", "cluster", "namespace"]
 
   # ── Environment — credentials from ExternalSecret ────────────────────────
-  extraEnvFrom:
-    - secretRef:
-        name: alertmanager-credentials
+  # Chart uses extraEnv (discrete items), not extraEnvFrom
+  extraEnv:
+    - name: SMTP_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: alertmanager-credentials
+          key: SMTP_PASSWORD
 
   # ── Ingress ───────────────────────────────────────────────────────────────
   ingress:
