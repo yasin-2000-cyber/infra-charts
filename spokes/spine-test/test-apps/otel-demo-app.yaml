@@ -1,0 +1,115 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-demo-app-script
+  namespace: test-apps
+data:
+  app.py: |
+    import json, time
+    from opentelemetry import trace
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+
+    resource = Resource({"service.name": "otel-demo-app", "k8s.namespace.name": "test-apps"})
+    provider = TracerProvider(resource=resource)
+    provider.add_span_processor(
+        BatchSpanProcessor(
+            OTLPSpanExporter(endpoint="alloy.monitoring.svc.cluster.local:4317", insecure=True)
+        )
+    )
+    trace.set_tracer_provider(provider)
+    tracer = trace.get_tracer("otel-demo-app")
+
+    while True:
+        with tracer.start_as_current_span("demo-operation") as span:
+            ctx = span.get_span_context()
+            trace_id = format(ctx.trace_id, "032x")
+            print(json.dumps({
+                "level": "info",
+                "message": "operation executed",
+                "trace_id": trace_id,
+                "service": "otel-demo-app"
+            }), flush=True)
+        time.sleep(5)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-demo-app
+  namespace: test-apps
+  labels:
+    app: otel-demo-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-demo-app
+  template:
+    metadata:
+      labels:
+        app: otel-demo-app
+    spec:
+      initContainers:
+        - name: install-otel
+          image: python:3.11-slim
+          command:
+            - pip
+            - install
+            - --target
+            - /otel-deps
+            - opentelemetry-sdk
+            - opentelemetry-exporter-otlp-proto-grpc
+          volumeMounts:
+            - name: otel-deps
+              mountPath: /otel-deps
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+            runAsNonRoot: true
+            runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
+      containers:
+        - name: app
+          image: python:3.11-slim
+          command: [python, /app/app.py]
+          env:
+            - name: PYTHONPATH
+              value: /otel-deps
+          volumeMounts:
+            - name: app-script
+              mountPath: /app
+            - name: otel-deps
+              mountPath: /otel-deps
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+            runAsNonRoot: true
+            runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
+      volumes:
+        - name: app-script
+          configMap:
+            name: otel-demo-app-script
+        - name: otel-deps
+          emptyDir: {}
