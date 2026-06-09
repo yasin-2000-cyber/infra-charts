@@ -56,7 +56,7 @@ data:
             {
               "refId": "A",
               "expr": "(1 - avg by(instance)(rate(node_cpu_seconds_total{cluster=~\"$cluster\",instance=~\"$instance\",mode=\"idle\"}[5m]))) * 100",
-              "legendFormat": "{{ instance }}"
+              "legendFormat": "{{ "{{" }} instance {{ "}}" }}"
             }
           ],
           "fieldConfig": {
@@ -82,7 +82,7 @@ data:
             {
               "refId": "A",
               "expr": "(1 - node_memory_MemAvailable_bytes{cluster=~\"$cluster\",instance=~\"$instance\"} / node_memory_MemTotal_bytes{cluster=~\"$cluster\",instance=~\"$instance\"}) * 100",
-              "legendFormat": "{{ instance }}"
+              "legendFormat": "{{ "{{" }} instance {{ "}}" }}"
             }
           ],
           "fieldConfig": {
@@ -108,12 +108,12 @@ data:
             {
               "refId": "A",
               "expr": "node_memory_MemTotal_bytes{cluster=~\"$cluster\",instance=~\"$instance\"} - node_memory_MemAvailable_bytes{cluster=~\"$cluster\",instance=~\"$instance\"}",
-              "legendFormat": "Used — {{ instance }}"
+              "legendFormat": "Used — {{ "{{" }} instance {{ "}}" }}"
             },
             {
               "refId": "B",
               "expr": "node_memory_MemTotal_bytes{cluster=~\"$cluster\",instance=~\"$instance\"}",
-              "legendFormat": "Total — {{ instance }}"
+              "legendFormat": "Total — {{ "{{" }} instance {{ "}}" }}"
             }
           ],
           "fieldConfig": { "defaults": { "unit": "bytes" } },
@@ -129,7 +129,7 @@ data:
             {
               "refId": "A",
               "expr": "(node_filesystem_size_bytes{cluster=~\"$cluster\",instance=~\"$instance\",mountpoint=\"/\",fstype!~\"tmpfs|overlay\"} - node_filesystem_free_bytes{cluster=~\"$cluster\",instance=~\"$instance\",mountpoint=\"/\",fstype!~\"tmpfs|overlay\"}) / node_filesystem_size_bytes{cluster=~\"$cluster\",instance=~\"$instance\",mountpoint=\"/\",fstype!~\"tmpfs|overlay\"} * 100",
-              "legendFormat": "{{ instance }}"
+              "legendFormat": "{{ "{{" }} instance {{ "}}" }}"
             }
           ],
           "fieldConfig": {
@@ -153,9 +153,9 @@ data:
           "gridPos": { "x": 18, "y": 8, "w": 6, "h": 8 },
           "datasource": { "type": "prometheus", "uid": "mimir" },
           "targets": [
-            { "refId": "A", "expr": "node_load1{cluster=~\"$cluster\",instance=~\"$instance\"}", "legendFormat": "1m — {{ instance }}" },
-            { "refId": "B", "expr": "node_load5{cluster=~\"$cluster\",instance=~\"$instance\"}", "legendFormat": "5m — {{ instance }}" },
-            { "refId": "C", "expr": "node_load15{cluster=~\"$cluster\",instance=~\"$instance\"}", "legendFormat": "15m — {{ instance }}" }
+            { "refId": "A", "expr": "node_load1{cluster=~\"$cluster\",instance=~\"$instance\"}", "legendFormat": "1m — {{ "{{" }} instance {{ "}}" }}" },
+            { "refId": "B", "expr": "node_load5{cluster=~\"$cluster\",instance=~\"$instance\"}", "legendFormat": "5m — {{ "{{" }} instance {{ "}}" }}" },
+            { "refId": "C", "expr": "node_load15{cluster=~\"$cluster\",instance=~\"$instance\"}", "legendFormat": "15m — {{ "{{" }} instance {{ "}}" }}" }
           ],
           "fieldConfig": { "defaults": { "unit": "short" } },
           "options": { "tooltip": { "mode": "multi" } }
@@ -170,12 +170,12 @@ data:
             {
               "refId": "A",
               "expr": "rate(node_disk_read_bytes_total{cluster=~\"$cluster\",instance=~\"$instance\"}[5m])",
-              "legendFormat": "Read — {{ instance }} {{ device }}"
+              "legendFormat": "Read — {{ "{{" }} instance {{ "}}" }} {{ "{{" }} device {{ "}}" }}"
             },
             {
               "refId": "B",
               "expr": "rate(node_disk_written_bytes_total{cluster=~\"$cluster\",instance=~\"$instance\"}[5m])",
-              "legendFormat": "Write — {{ instance }} {{ device }}"
+              "legendFormat": "Write — {{ "{{" }} instance {{ "}}" }} {{ "{{" }} device {{ "}}" }}"
             }
           ],
           "fieldConfig": { "defaults": { "unit": "Bps" } },
@@ -191,12 +191,12 @@ data:
             {
               "refId": "A",
               "expr": "rate(node_network_receive_bytes_total{cluster=~\"$cluster\",instance=~\"$instance\",device!~\"lo|veth.*|docker.*|flannel.*|cali.*|cbr.*\"}[5m])",
-              "legendFormat": "RX — {{ instance }} {{ device }}"
+              "legendFormat": "RX — {{ "{{" }} instance {{ "}}" }} {{ "{{" }} device {{ "}}" }}"
             },
             {
               "refId": "B",
               "expr": "rate(node_network_transmit_bytes_total{cluster=~\"$cluster\",instance=~\"$instance\",device!~\"lo|veth.*|docker.*|flannel.*|cali.*|cbr.*\"}[5m])",
-              "legendFormat": "TX — {{ instance }} {{ device }}"
+              "legendFormat": "TX — {{ "{{" }} instance {{ "}}" }} {{ "{{" }} device {{ "}}" }}"
             }
           ],
           "fieldConfig": { "defaults": { "unit": "Bps" } },

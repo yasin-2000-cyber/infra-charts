@@ -143,7 +143,7 @@ data:
             {
               "refId": "A",
               "expr": "count by(phase)(kube_pod_status_phase{cluster=~\"$cluster\",namespace=~\"$namespace\"})",
-              "legendFormat": "{{ phase }}"
+              "legendFormat": "{{ "{{" }} phase {{ "}}" }}"
             }
           ],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "legend": { "displayMode": "table", "placement": "right" } }
@@ -158,7 +158,7 @@ data:
             {
               "refId": "A",
               "expr": "topk(10, rate(kube_pod_container_status_restarts_total{cluster=~\"$cluster\",namespace=~\"$namespace\"}[5m]) > 0)",
-              "legendFormat": "{{ namespace }}/{{ pod }}"
+              "legendFormat": "{{ "{{" }} namespace {{ "}}" }}/{{ "{{" }} pod {{ "}}" }}"
             }
           ],
           "fieldConfig": { "defaults": { "unit": "short" } },
@@ -174,7 +174,7 @@ data:
             {
               "refId": "A",
               "expr": "kube_pod_status_phase{cluster=~\"$cluster\",namespace=~\"$namespace\"}",
-              "legendFormat": "{{ namespace }}/{{ pod }} — {{ phase }}",
+              "legendFormat": "{{ "{{" }} namespace {{ "}}" }}/{{ "{{" }} pod {{ "}}" }} — {{ "{{" }} phase {{ "}}" }}",
               "instant": true
             }
           ],
@@ -202,7 +202,7 @@ data:
             {
               "refId": "A",
               "expr": "kubelet_volume_stats_used_bytes{cluster=~\"$cluster\",namespace=~\"$namespace\"} / kubelet_volume_stats_capacity_bytes{cluster=~\"$cluster\",namespace=~\"$namespace\"} * 100",
-              "legendFormat": "{{ namespace }}/{{ persistentvolumeclaim }}"
+              "legendFormat": "{{ "{{" }} namespace {{ "}}" }}/{{ "{{" }} persistentvolumeclaim {{ "}}" }}"
             }
           ],
           "fieldConfig": {
@@ -229,13 +229,13 @@ data:
             {
               "refId": "A",
               "expr": "kube_statefulset_status_replicas_ready{cluster=~\"$cluster\",namespace=~\"$namespace\"}",
-              "legendFormat": "{{ statefulset }}",
+              "legendFormat": "{{ "{{" }} statefulset {{ "}}" }}",
               "instant": true
             },
             {
               "refId": "B",
               "expr": "kube_statefulset_replicas{cluster=~\"$cluster\",namespace=~\"$namespace\"}",
-              "legendFormat": "{{ statefulset }}",
+              "legendFormat": "{{ "{{" }} statefulset {{ "}}" }}",
               "instant": true
             }
           ],

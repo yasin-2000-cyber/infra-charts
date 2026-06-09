@@ -135,7 +135,7 @@ data:
             {
               "refId": "A",
               "expr": "(1 - avg by(cluster)(rate(node_cpu_seconds_total{cluster=~\"$cluster\",mode=\"idle\"}[5m]))) * 100",
-              "legendFormat": "{{ cluster }}"
+              "legendFormat": "{{ "{{" }} cluster {{ "}}" }}"
             }
           ],
           "fieldConfig": {
@@ -161,7 +161,7 @@ data:
             {
               "refId": "A",
               "expr": "(1 - sum by(cluster)(node_memory_MemAvailable_bytes{cluster=~\"$cluster\"}) / sum by(cluster)(node_memory_MemTotal_bytes{cluster=~\"$cluster\"})) * 100",
-              "legendFormat": "{{ cluster }}"
+              "legendFormat": "{{ "{{" }} cluster {{ "}}" }}"
             }
           ],
           "fieldConfig": {
@@ -187,7 +187,7 @@ data:
             {
               "refId": "A",
               "expr": "kube_node_status_condition{cluster=~\"$cluster\",condition=\"Ready\"}",
-              "legendFormat": "{{ node }}",
+              "legendFormat": "{{ "{{" }} node {{ "}}" }}",
               "instant": true
             }
           ],
@@ -208,7 +208,7 @@ data:
             {
               "refId": "A",
               "expr": "topk(5, rate(kube_pod_container_status_restarts_total{cluster=~\"$cluster\"}[5m]) > 0)",
-              "legendFormat": "{{ namespace }}/{{ pod }}/{{ container }}"
+              "legendFormat": "{{ "{{" }} namespace {{ "}}" }}/{{ "{{" }} pod {{ "}}" }}/{{ "{{" }} container {{ "}}" }}"
             }
           ],
           "fieldConfig": { "defaults": { "unit": "short" } },
