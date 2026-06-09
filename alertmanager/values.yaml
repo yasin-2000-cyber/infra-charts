@@ -42,11 +42,11 @@ alertmanager:
     receivers:
       - name: "email-default"
         email_configs:
-          - to: "yasin.ib@aau.iq"
+          - to: "yasin.ib@aau.iq,mahmood.s@aau.iq,mustafa.kh@aau.iq"
             send_resolved: true
       - name: "email-critical"
         email_configs:
-          - to: "yasin.ib@aau.iq"
+          - to: "yasin.ib@aau.iq,mahmood.s@aau.iq,mustafa.kh@aau.iq"
             send_resolved: true
     inhibit_rules:
       - source_match:
