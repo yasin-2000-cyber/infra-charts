@@ -14,23 +14,85 @@ alertmanager:
       memory: 128Mi
 
   # ── AlertManager config ───────────────────────────────────────────────────
-  # Config lives in the alertmanager-config Secret rendered by ExternalSecret
-  # (templates/externalsecret.yaml). Disable the built-in ConfigMap so the
-  # chart does not create or mount it.
+  # ${SMTP_PASSWORD} is a placeholder substituted at pod startup by the
+  # config-renderer init container (see extraInitContainers below).
   config:
-    enabled: false
+    enabled: true
+    global:
+      resolve_timeout: 5m
+      smtp_from: "dcalert@aau.iq"
+      smtp_smarthost: "smtp.office365.com:587"
+      smtp_auth_username: "dcalert@aau.iq"
+      smtp_auth_password: ${SMTP_PASSWORD}
+      smtp_require_tls: true
+    route:
+      group_by: ["alertname", "cluster", "namespace"]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+      receiver: "email-default"
+      routes:
+        - match:
+            severity: critical
+          receiver: "email-critical"
+          continue: true
+        - match:
+            severity: warning
+          receiver: "email-default"
+    receivers:
+      - name: "email-default"
+        email_configs:
+          - to: "dcalert@aau.iq"
+            send_resolved: true
+      - name: "email-critical"
+        email_configs:
+          - to: "dcalert@aau.iq"
+            send_resolved: true
+    inhibit_rules:
+      - source_match:
+          severity: critical
+        target_match:
+          severity: warning
+        equal: ["alertname", "cluster", "namespace"]
 
-  # Point alertmanager at the Secret-backed config file
+  # ── Init container: render config with real password ──────────────────────
+  # Reads the ConfigMap (mounted as 'config' volume at /etc/alertmanager-src),
+  # substitutes ${SMTP_PASSWORD} from the env var, writes rendered config to
+  # the 'alertmanager-rendered' emptyDir. Main container reads from there.
+  extraInitContainers:
+    - name: config-renderer
+      image: busybox:1.36
+      command:
+        - sh
+        - -c
+        - >-
+          sed "s|\${SMTP_PASSWORD}|${SMTP_PASSWORD}|g"
+          /etc/alertmanager-src/alertmanager.yml
+          > /etc/alertmanager-rendered/alertmanager.yml
+      env:
+        - name: SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: alertmanager-credentials
+              key: SMTP_PASSWORD
+      volumeMounts:
+        - name: config
+          mountPath: /etc/alertmanager-src
+          readOnly: true
+        - name: alertmanager-rendered
+          mountPath: /etc/alertmanager-rendered
+
+  extraVolumes:
+    - name: alertmanager-rendered
+      emptyDir: {}
+
+  extraVolumeMounts:
+    - name: alertmanager-rendered
+      mountPath: /etc/alertmanager-rendered
+
+  # hasKey check in statefulset.yaml skips default --config.file when this key exists
   extraArgs:
-    config.file: /etc/alertmanager-secret/alertmanager.yml
-
-  # Mount the alertmanager-config Secret (rendered by ExternalSecret with real password)
-  extraSecretMounts:
-    - name: alertmanager-config-secret
-      secretName: alertmanager-config
-      mountPath: /etc/alertmanager-secret/alertmanager.yml
-      subPath: alertmanager.yml
-      readOnly: true
+    config.file: /etc/alertmanager-rendered/alertmanager.yml
 
   # ── Ingress ───────────────────────────────────────────────────────────────
   ingress:
