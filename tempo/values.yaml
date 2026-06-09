@@ -20,6 +20,17 @@ tempo:
         http:
           endpoint: 0.0.0.0:4318
 
+  # ── Metrics generator — writes span metrics (RED) to Mimir ───────────────
+  metricsGenerator:
+    enabled: true
+    remoteWriteUrl: "http://mimir-nginx.monitoring.svc.cluster.local:80/api/v1/push"
+
+  # Enable service-graph and span-metrics processors for all tenants
+  global_overrides:
+    metrics_generator_processors:
+      - service-graphs
+      - span-metrics
+
   # ── Retention — 7 days for test cluster ───────────────────────────────────
   retention: 168h
 

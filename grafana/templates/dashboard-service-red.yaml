@@ -24,7 +24,7 @@ data:
             "label": "Cluster",
             "type": "query",
             "datasource": { "type": "prometheus", "uid": "mimir" },
-            "query": { "query": "label_values(traces_service_graph_request_total, cluster)", "refId": "StandardVariableQuery" },
+            "query": { "query": "label_values(up, cluster)", "refId": "StandardVariableQuery" },
             "refresh": 2,
             "sort": 1,
             "multi": false,
