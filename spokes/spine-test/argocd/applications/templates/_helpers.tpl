@@ -22,6 +22,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: {{ .wave | quote }}
 spec:
+  revisionHistoryLimit: 2
   project: spine
   source:
     repoURL: {{ .repoURL }}
