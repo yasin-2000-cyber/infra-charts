@@ -156,13 +156,14 @@ grafana:
           secureJsonData:
             httpHeaderValue1: "hub|spine-test"
 
-        # AlertManager — view and silence alerts
+        # AlertManager — view/silence alerts + delivery backend for Grafana-managed alerts
         - name: Alertmanager
           type: alertmanager
           uid: alertmanager
           url: http://alertmanager-monitoring.monitoring.svc.cluster.local:9093
           jsonData:
             implementation: prometheus
+            handleGrafanaManagedAlerts: true
 
   # ── Dashboard sidecar — auto-loads ConfigMaps labeled grafana_dashboard=1 ──
   sidecar:
