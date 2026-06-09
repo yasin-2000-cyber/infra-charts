@@ -54,11 +54,13 @@ grafana:
       token_url: https://login.microsoftonline.com/${AZURE_TENANT_ID}/oauth2/v2.0/token
       # Leave empty to allow all Azure AD users (restrict via RBAC below)
       allowed_domains: ""
+      # Set to comma-separated group OIDs to restrict login; empty = all Azure AD users allowed
       allowed_groups: ""
-      # Map Azure AD group memberships to Grafana roles
-      # Group Object IDs are set here — replace with real IDs from Azure AD
-      # Format: "<group-oid>=<GrafanaRole>"
-      # role_attribute_path: "contains(groups[*], '<ADMIN_GROUP_OID>') && 'Admin' || contains(groups[*], '<EDITOR_GROUP_OID>') && 'Editor' || 'Viewer'"
+      # JMESPath expression mapping Azure AD groups claim to Grafana roles.
+      # Replace <ADMIN_GROUP_OID> and <EDITOR_GROUP_OID> with real Object IDs from Azure AD portal:
+      #   Azure Portal → Azure Active Directory → Groups → <group> → Overview → Object ID
+      # Requires: App Registration manifest → "groupMembershipClaims": "SecurityGroup"
+      role_attribute_path: "contains(groups[*], '<ADMIN_GROUP_OID>') && 'Admin' || contains(groups[*], '<EDITOR_GROUP_OID>') && 'Editor' || 'Viewer'"
       role_attribute_strict: false
       allow_assign_grafana_admin: true
       skip_org_role_sync: false
@@ -175,6 +177,494 @@ grafana:
       searchNamespace: ALL
     datasources:
       enabled: false   # We provision datasources via values above
+
+  # ── Alert Rules (provisioned as-code) ────────────────────────────────────
+  # Each sub-key becomes a file in /etc/grafana/provisioning/alerting/ inside the pod.
+  # Rules are evaluated by Grafana's unified alerting engine against Mimir every 1 minute.
+  # Alerts are forwarded to the in-cluster Alertmanager (handleGrafanaManagedAlerts: true).
+  alerting:
+    contactpoints.yaml:
+      apiVersion: 1
+      contactPoints:
+        - orgId: 1
+          name: alertmanager
+          receivers:
+            - uid: alertmanager-receiver
+              type: prometheus-alertmanager
+              settings:
+                url: http://alertmanager-monitoring.monitoring.svc.cluster.local:9093
+                basicAuthUser: ""
+              disableResolveMessage: false
+
+    policies.yaml:
+      apiVersion: 1
+      policies:
+        - orgId: 1
+          receiver: alertmanager
+          group_by: ["alertname", "cluster", "namespace"]
+          group_wait: 30s
+          group_interval: 5m
+          repeat_interval: 4h
+          routes:
+            - receiver: alertmanager
+              object_matchers:
+                - ["severity", "=", "critical"]
+              repeat_interval: 2h
+
+    rules.yaml:
+      apiVersion: 1
+      groups:
+        - orgId: 1
+          name: InfrastructureAlerts
+          folder: Infrastructure Alerts
+          interval: 1m
+          rules:
+
+            # ── Node alerts ──────────────────────────────────────────────
+            - uid: infra-node-down
+              title: NodeDown
+              condition: B
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 300
+                    to: 0
+                  datasourceUid: mimir
+                  model:
+                    datasource:
+                      type: prometheus
+                      uid: mimir
+                    expr: 'up{job="node-exporter"}'
+                    instant: true
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: A
+                - refId: B
+                  relativeTimeRange:
+                    from: 0
+                    to: 0
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                      - evaluator:
+                          params: [0.5]
+                          type: lt
+                        operator:
+                          type: and
+                        query:
+                          params: [A]
+                        reducer:
+                          type: last
+                        type: query
+                    datasource:
+                      type: __expr__
+                      uid: __expr__
+                    expression: A
+                    refId: B
+                    type: classic_conditions
+              noDataState: OK
+              execErrState: Error
+              for: 2m
+              labels:
+                severity: critical
+              annotations:
+                summary: "Node {{ $labels.instance }} is down"
+                description: "Node exporter on {{ $labels.instance }} has been unreachable for more than 2 minutes."
+              isPaused: false
+
+            - uid: infra-node-not-ready
+              title: NodeNotReady
+              condition: B
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 300
+                    to: 0
+                  datasourceUid: mimir
+                  model:
+                    datasource:
+                      type: prometheus
+                      uid: mimir
+                    expr: 'kube_node_status_condition{condition="Ready",status="true"}'
+                    instant: true
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: A
+                - refId: B
+                  relativeTimeRange:
+                    from: 0
+                    to: 0
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                      - evaluator:
+                          params: [0.5]
+                          type: lt
+                        operator:
+                          type: and
+                        query:
+                          params: [A]
+                        reducer:
+                          type: last
+                        type: query
+                    datasource:
+                      type: __expr__
+                      uid: __expr__
+                    expression: A
+                    refId: B
+                    type: classic_conditions
+              noDataState: OK
+              execErrState: Error
+              for: 2m
+              labels:
+                severity: critical
+              annotations:
+                summary: "Node {{ $labels.node }} is NotReady"
+                description: "Kubernetes node {{ $labels.node }} has been in NotReady state for more than 2 minutes."
+              isPaused: false
+
+            # ── Pod alerts ───────────────────────────────────────────────
+            - uid: infra-pod-crash-looping
+              title: PodCrashLooping
+              condition: B
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: mimir
+                  model:
+                    datasource:
+                      type: prometheus
+                      uid: mimir
+                    expr: 'rate(kube_pod_container_status_restarts_total[5m])'
+                    instant: true
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: A
+                - refId: B
+                  relativeTimeRange:
+                    from: 0
+                    to: 0
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                      - evaluator:
+                          params: [0]
+                          type: gt
+                        operator:
+                          type: and
+                        query:
+                          params: [A]
+                        reducer:
+                          type: last
+                        type: query
+                    datasource:
+                      type: __expr__
+                      uid: __expr__
+                    expression: A
+                    refId: B
+                    type: classic_conditions
+              noDataState: OK
+              execErrState: Error
+              for: 15m
+              labels:
+                severity: warning
+              annotations:
+                summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash-looping"
+                description: "Container {{ $labels.container }} in pod {{ $labels.namespace }}/{{ $labels.pod }} is restarting continuously."
+              isPaused: false
+
+            # ── CPU alerts ───────────────────────────────────────────────
+            - uid: infra-high-cpu-warning
+              title: HighCPU
+              condition: B
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 900
+                    to: 0
+                  datasourceUid: mimir
+                  model:
+                    datasource:
+                      type: prometheus
+                      uid: mimir
+                    expr: '(1 - avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[5m]))) * 100'
+                    instant: true
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: A
+                - refId: B
+                  relativeTimeRange:
+                    from: 0
+                    to: 0
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                      - evaluator:
+                          params: [80]
+                          type: gt
+                        operator:
+                          type: and
+                        query:
+                          params: [A]
+                        reducer:
+                          type: last
+                        type: query
+                    datasource:
+                      type: __expr__
+                      uid: __expr__
+                    expression: A
+                    refId: B
+                    type: classic_conditions
+              noDataState: OK
+              execErrState: Error
+              for: 10m
+              labels:
+                severity: warning
+              annotations:
+                summary: "High CPU usage on {{ $labels.instance }}"
+                description: "CPU usage on {{ $labels.instance }} has been above 80% for more than 10 minutes."
+              isPaused: false
+
+            - uid: infra-high-cpu-critical
+              title: HighCPUCritical
+              condition: B
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: mimir
+                  model:
+                    datasource:
+                      type: prometheus
+                      uid: mimir
+                    expr: '(1 - avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[5m]))) * 100'
+                    instant: true
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: A
+                - refId: B
+                  relativeTimeRange:
+                    from: 0
+                    to: 0
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                      - evaluator:
+                          params: [90]
+                          type: gt
+                        operator:
+                          type: and
+                        query:
+                          params: [A]
+                        reducer:
+                          type: last
+                        type: query
+                    datasource:
+                      type: __expr__
+                      uid: __expr__
+                    expression: A
+                    refId: B
+                    type: classic_conditions
+              noDataState: OK
+              execErrState: Error
+              for: 5m
+              labels:
+                severity: critical
+              annotations:
+                summary: "Critical CPU usage on {{ $labels.instance }}"
+                description: "CPU usage on {{ $labels.instance }} has been above 90% for more than 5 minutes."
+              isPaused: false
+
+            # ── Memory alerts ────────────────────────────────────────────
+            - uid: infra-high-memory
+              title: HighMemory
+              condition: B
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: mimir
+                  model:
+                    datasource:
+                      type: prometheus
+                      uid: mimir
+                    expr: '(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100'
+                    instant: true
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: A
+                - refId: B
+                  relativeTimeRange:
+                    from: 0
+                    to: 0
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                      - evaluator:
+                          params: [85]
+                          type: gt
+                        operator:
+                          type: and
+                        query:
+                          params: [A]
+                        reducer:
+                          type: last
+                        type: query
+                    datasource:
+                      type: __expr__
+                      uid: __expr__
+                    expression: A
+                    refId: B
+                    type: classic_conditions
+              noDataState: OK
+              execErrState: Error
+              for: 5m
+              labels:
+                severity: warning
+              annotations:
+                summary: "High memory usage on {{ $labels.instance }}"
+                description: "Memory usage on {{ $labels.instance }} has been above 85% for more than 5 minutes."
+              isPaused: false
+
+            # ── PVC alerts ───────────────────────────────────────────────
+            - uid: infra-pvc-nearly-full
+              title: PVCNearlyFull
+              condition: B
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: mimir
+                  model:
+                    datasource:
+                      type: prometheus
+                      uid: mimir
+                    expr: 'kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes * 100'
+                    instant: true
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: A
+                - refId: B
+                  relativeTimeRange:
+                    from: 0
+                    to: 0
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                      - evaluator:
+                          params: [80]
+                          type: gt
+                        operator:
+                          type: and
+                        query:
+                          params: [A]
+                        reducer:
+                          type: last
+                        type: query
+                    datasource:
+                      type: __expr__
+                      uid: __expr__
+                    expression: A
+                    refId: B
+                    type: classic_conditions
+              noDataState: OK
+              execErrState: Error
+              for: 5m
+              labels:
+                severity: warning
+              annotations:
+                summary: "PVC {{ $labels.persistentvolumeclaim }} is nearly full"
+                description: "PVC {{ $labels.persistentvolumeclaim }} in namespace {{ $labels.namespace }} is more than 80% full."
+              isPaused: false
+
+            - uid: infra-pvc-full
+              title: PVCFull
+              condition: B
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: mimir
+                  model:
+                    datasource:
+                      type: prometheus
+                      uid: mimir
+                    expr: 'kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes * 100'
+                    instant: true
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: A
+                - refId: B
+                  relativeTimeRange:
+                    from: 0
+                    to: 0
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                      - evaluator:
+                          params: [95]
+                          type: gt
+                        operator:
+                          type: and
+                        query:
+                          params: [A]
+                        reducer:
+                          type: last
+                        type: query
+                    datasource:
+                      type: __expr__
+                      uid: __expr__
+                    expression: A
+                    refId: B
+                    type: classic_conditions
+              noDataState: OK
+              execErrState: Error
+              for: 2m
+              labels:
+                severity: critical
+              annotations:
+                summary: "PVC {{ $labels.persistentvolumeclaim }} is critically full"
+                description: "PVC {{ $labels.persistentvolumeclaim }} in namespace {{ $labels.namespace }} is more than 95% full."
+              isPaused: false
+
+  # ── Dashboard Library (provisioned from grafana.com at startup) ───────────
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: infrastructure
+          orgId: 1
+          folder: Infrastructure
+          type: file
+          disableDeletion: true
+          editable: false
+          options:
+            path: /var/lib/grafana/dashboards/infrastructure
+
+  dashboards:
+    infrastructure:
+      node-exporter-full:
+        gnetId: 1860
+        revision: 37
+        datasource: Mimir
+      kubernetes-cluster-overview:
+        gnetId: 7249
+        revision: 1
+        datasource: Mimir
+      k8s-namespace-pods:
+        gnetId: 6417
+        revision: 1
+        datasource: Mimir
+      loki-dashboard:
+        gnetId: 13639
+        revision: 2
+        datasource: Loki
 
   # ── Ingress ───────────────────────────────────────────────────────────────
   ingress:
