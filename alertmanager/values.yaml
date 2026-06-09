@@ -60,6 +60,10 @@ alertmanager:
           severity: warning
         equal: ["alertname", "cluster", "namespace"]
 
+  # ── Enable env var expansion in config (resolves ${SMTP_PASSWORD} → actual value) ──
+  extraArgs:
+    config.expand-env: "true"
+
   # ── Environment — credentials from ExternalSecret ────────────────────────
   # Chart uses extraEnv (discrete items), not extraEnvFrom
   extraEnv:
