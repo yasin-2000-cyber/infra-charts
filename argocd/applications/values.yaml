@@ -19,4 +19,5 @@ apps:
   tempo: true
   grafana: true
   alertmanager: true
+  hubAlloy: true
   spineTest: true

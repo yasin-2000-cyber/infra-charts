@@ -1,0 +1,11 @@
+{{- if .Values.apps.hubAlloy }}
+{{- include "app.standard" (dict
+    "name"           "hub-alloy"
+    "wave"           "10"
+    "path"           "hub-alloy"
+    "namespace"      "monitoring"
+    "repoURL"        .Values.repoURL
+    "targetRevision" .Values.targetRevision
+    "clusterURL"     .Values.clusterURL
+) }}
+{{- end }}

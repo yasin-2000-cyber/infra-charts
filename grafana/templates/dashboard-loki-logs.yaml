@@ -1,0 +1,138 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-loki-logs
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  loki-logs.json: |
+    {
+      "title": "Loki Logs Explorer",
+      "uid": "loki-logs",
+      "schemaVersion": 38,
+      "version": 1,
+      "refresh": "30s",
+      "tags": ["logs", "loki", "cluster"],
+      "time": { "from": "now-1h", "to": "now" },
+      "timepicker": {},
+      "templating": {
+        "list": [
+          {
+            "name": "cluster",
+            "label": "Cluster",
+            "type": "query",
+            "datasource": { "type": "prometheus", "uid": "mimir" },
+            "query": { "query": "label_values(up, cluster)", "refId": "StandardVariableQuery" },
+            "refresh": 2,
+            "sort": 1,
+            "multi": false,
+            "includeAll": false,
+            "current": {}
+          },
+          {
+            "name": "namespace",
+            "label": "Namespace",
+            "type": "query",
+            "datasource": { "type": "prometheus", "uid": "mimir" },
+            "query": { "query": "label_values(kube_pod_info{cluster=~\"$cluster\"}, namespace)", "refId": "StandardVariableQuery" },
+            "refresh": 2,
+            "sort": 1,
+            "multi": true,
+            "includeAll": true,
+            "allValue": ".*",
+            "current": {}
+          },
+          {
+            "name": "pod",
+            "label": "Pod",
+            "type": "query",
+            "datasource": { "type": "prometheus", "uid": "mimir" },
+            "query": { "query": "label_values(kube_pod_info{cluster=~\"$cluster\",namespace=~\"$namespace\"}, pod)", "refId": "StandardVariableQuery" },
+            "refresh": 2,
+            "sort": 1,
+            "multi": true,
+            "includeAll": true,
+            "allValue": ".*",
+            "current": {}
+          },
+          {
+            "name": "level",
+            "label": "Level",
+            "type": "custom",
+            "options": [
+              { "text": "All", "value": ".*", "selected": true },
+              { "text": "error", "value": "error" },
+              { "text": "warn", "value": "warn" },
+              { "text": "info", "value": "info" },
+              { "text": "debug", "value": "debug" }
+            ],
+            "multi": false,
+            "includeAll": false,
+            "current": {}
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "title": "Log Volume by Namespace",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 0, "w": 16, "h": 6 },
+          "datasource": { "type": "loki", "uid": "loki" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by(namespace)(count_over_time({cluster=\"$cluster\",namespace=~\"$namespace\"}[$__interval]))",
+              "legendFormat": "{{ "{{" }} namespace {{ "}}" }}"
+            }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" } },
+          "options": { "tooltip": { "mode": "multi" } }
+        },
+        {
+          "id": 2,
+          "title": "Error Rate",
+          "type": "timeseries",
+          "gridPos": { "x": 16, "y": 0, "w": 8, "h": 6 },
+          "datasource": { "type": "loki", "uid": "loki" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(count_over_time({cluster=\"$cluster\",namespace=~\"$namespace\"} |~ `(?i)(error|exception|fatal)` [$__interval]))",
+              "legendFormat": "Errors"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": { "mode": "fixed", "fixedColor": "red" }
+            }
+          },
+          "options": { "tooltip": { "mode": "single" } }
+        },
+        {
+          "id": 3,
+          "title": "Logs",
+          "type": "logs",
+          "gridPos": { "x": 0, "y": 6, "w": 24, "h": 18 },
+          "datasource": { "type": "loki", "uid": "loki" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "{cluster=\"$cluster\",namespace=~\"$namespace\",pod=~\"$pod\"}"
+            }
+          ],
+          "options": {
+            "dedupStrategy": "signature",
+            "showTime": true,
+            "showLabels": false,
+            "showCommonLabels": false,
+            "wrapLogMessage": true,
+            "prettifyLogMessage": false,
+            "enableLogDetails": true,
+            "sortOrder": "Descending"
+          }
+        }
+      ]
+    }

@@ -1,0 +1,211 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-stack-health
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  stack-health.json: |
+    {
+      "title": "Observability Stack Health",
+      "uid": "stack-health",
+      "schemaVersion": 38,
+      "version": 1,
+      "refresh": "30s",
+      "tags": ["platform", "mimir", "loki", "tempo", "hub"],
+      "time": { "from": "now-1h", "to": "now" },
+      "timepicker": {},
+      "description": "Health of the hub observability stack — Mimir, Loki, Tempo, and Grafana alert state. Hub-side metrics only.",
+      "panels": [
+        {
+          "id": 1,
+          "title": "Mimir Ingestion Rate (samples/s)",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 },
+          "datasource": { "type": "prometheus", "uid": "mimir" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(cortex_distributor_samples_in_total[5m]))",
+              "legendFormat": "Samples/s"
+            }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" } },
+          "options": { "tooltip": { "mode": "single" } }
+        },
+        {
+          "id": 2,
+          "title": "Loki Push Rate (lines/s)",
+          "type": "timeseries",
+          "gridPos": { "x": 8, "y": 0, "w": 8, "h": 8 },
+          "datasource": { "type": "prometheus", "uid": "mimir" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(loki_distributor_lines_received_total[5m]))",
+              "legendFormat": "Lines/s"
+            }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" } },
+          "options": { "tooltip": { "mode": "single" } }
+        },
+        {
+          "id": 3,
+          "title": "Tempo Span Ingestion (spans/s)",
+          "type": "timeseries",
+          "gridPos": { "x": 16, "y": 0, "w": 8, "h": 8 },
+          "datasource": { "type": "prometheus", "uid": "mimir" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(tempo_distributor_spans_received_total[5m]))",
+              "legendFormat": "Spans/s"
+            }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" } },
+          "options": { "tooltip": { "mode": "single" } }
+        },
+        {
+          "id": 4,
+          "title": "Active Firing Alerts",
+          "type": "stat",
+          "gridPos": { "x": 0, "y": 8, "w": 4, "h": 4 },
+          "datasource": { "type": "prometheus", "uid": "mimir" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "count(ALERTS{alertstate=\"firing\"}) or vector(0)",
+              "legendFormat": "Firing"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }]
+              },
+              "color": { "mode": "thresholds" }
+            }
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" }
+        },
+        {
+          "id": 5,
+          "title": "Total Alert Rules",
+          "type": "stat",
+          "gridPos": { "x": 4, "y": 8, "w": 4, "h": 4 },
+          "datasource": { "type": "prometheus", "uid": "mimir" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "count(ALERTS) or vector(0)",
+              "legendFormat": "Rules"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
+              "color": { "mode": "thresholds" }
+            }
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" }
+        },
+        {
+          "id": 6,
+          "title": "Mimir Query Rate (queries/s)",
+          "type": "timeseries",
+          "gridPos": { "x": 8, "y": 8, "w": 8, "h": 8 },
+          "datasource": { "type": "prometheus", "uid": "mimir" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(cortex_query_frontend_queries_total[5m]))",
+              "legendFormat": "Queries/s"
+            }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" } },
+          "options": { "tooltip": { "mode": "single" } }
+        },
+        {
+          "id": 7,
+          "title": "Mimir Write Errors",
+          "type": "timeseries",
+          "gridPos": { "x": 16, "y": 8, "w": 8, "h": 8 },
+          "datasource": { "type": "prometheus", "uid": "mimir" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(cortex_distributor_non_ha_samples_received_total{reason!=\"\"}[5m]))",
+              "legendFormat": "Write Errors/s"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": { "mode": "fixed", "fixedColor": "red" }
+            }
+          },
+          "options": { "tooltip": { "mode": "single" } }
+        },
+        {
+          "id": 8,
+          "title": "Firing Alerts",
+          "type": "table",
+          "gridPos": { "x": 0, "y": 16, "w": 24, "h": 8 },
+          "datasource": { "type": "prometheus", "uid": "mimir" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "ALERTS{alertstate=\"firing\"}",
+              "legendFormat": "{{ "{{" }} alertname {{ "}}" }} — {{ "{{" }} cluster {{ "}}" }}",
+              "instant": true
+            }
+          ],
+          "transformations": [
+            { "id": "labelsToFields", "options": { "mode": "columns" } },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": { "__name__": true, "Value": true },
+                "renameByName": { "alertname": "Alert", "cluster": "Cluster", "namespace": "Namespace", "severity": "Severity", "alertstate": "State" }
+              }
+            }
+          ],
+          "fieldConfig": { "defaults": { "custom": { "filterable": true } } },
+          "options": { "sortBy": [{ "displayName": "Severity", "desc": true }] }
+        },
+        {
+          "id": 9,
+          "title": "Loki Ingester WAL Size",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 24, "w": 12, "h": 8 },
+          "datasource": { "type": "prometheus", "uid": "mimir" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(loki_ingester_wal_disk_size_bytes)",
+              "legendFormat": "WAL bytes"
+            }
+          ],
+          "fieldConfig": { "defaults": { "unit": "bytes" } },
+          "options": { "tooltip": { "mode": "single" } }
+        },
+        {
+          "id": 10,
+          "title": "Mimir Active Series",
+          "type": "timeseries",
+          "gridPos": { "x": 12, "y": 24, "w": 12, "h": 8 },
+          "datasource": { "type": "prometheus", "uid": "mimir" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(cortex_ingester_memory_series)",
+              "legendFormat": "Active Series"
+            }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" } },
+          "options": { "tooltip": { "mode": "single" } }
+        }
+      ]
+    }

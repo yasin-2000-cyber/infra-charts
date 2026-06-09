@@ -1,0 +1,22 @@
+image:
+  repository: grafana/alloy
+  tag: v1.9.0
+  pullPolicy: IfNotPresent
+
+# Mimir and Loki endpoints (in-cluster, same namespace)
+mimir:
+  url: http://mimir-nginx.monitoring.svc.cluster.local:80/api/v1/push
+
+loki:
+  url: http://loki-gateway.monitoring.svc.cluster.local:80/loki/api/v1/push
+
+cluster: hub
+datacenter: AAU
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
