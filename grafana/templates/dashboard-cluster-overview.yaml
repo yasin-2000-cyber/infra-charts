@@ -1,0 +1,218 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-cluster-overview
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  cluster-overview.json: |
+    {
+      "title": "Cluster Overview",
+      "uid": "cluster-overview",
+      "schemaVersion": 38,
+      "version": 1,
+      "refresh": "30s",
+      "tags": ["cluster", "infrastructure"],
+      "time": { "from": "now-1h", "to": "now" },
+      "timepicker": {},
+      "templating": {
+        "list": [
+          {
+            "name": "cluster",
+            "label": "Cluster",
+            "type": "query",
+            "datasource": { "type": "prometheus", "uid": "mimir" },
+            "query": { "query": "label_values(up, cluster)", "refId": "StandardVariableQuery" },
+            "refresh": 2,
+            "sort": 1,
+            "multi": false,
+            "includeAll": true,
+            "allValue": ".*",
+            "current": {}
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "title": "Nodes Ready",
+          "type": "stat",
+          "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+          "datasource": { "type": "prometheus", "uid": "mimir" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "count(kube_node_status_condition{cluster=~\"$cluster\",condition=\"Ready\",status=\"true\"})",
+              "legendFormat": "Ready"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+              "color": { "mode": "thresholds" }
+            }
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "background" }
+        },
+        {
+          "id": 2,
+          "title": "Pods Running",
+          "type": "stat",
+          "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+          "datasource": { "type": "prometheus", "uid": "mimir" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "count(kube_pod_status_phase{cluster=~\"$cluster\",phase=\"Running\"})",
+              "legendFormat": "Running"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+              "color": { "mode": "thresholds" }
+            }
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "background" }
+        },
+        {
+          "id": 3,
+          "title": "Pods Not Running",
+          "type": "stat",
+          "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+          "datasource": { "type": "prometheus", "uid": "mimir" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "count(kube_pod_status_phase{cluster=~\"$cluster\",phase!=\"Running\"}) or vector(0)",
+              "legendFormat": "Not Running"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }]
+              },
+              "color": { "mode": "thresholds" }
+            }
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "background" }
+        },
+        {
+          "id": 4,
+          "title": "Container Restart Rate (top 5)",
+          "type": "stat",
+          "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+          "datasource": { "type": "prometheus", "uid": "mimir" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(kube_pod_container_status_restarts_total{cluster=~\"$cluster\"}[5m]))",
+              "legendFormat": "Restarts/s"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.01 }, { "color": "red", "value": 0.1 }]
+              },
+              "color": { "mode": "thresholds" }
+            }
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "background" }
+        },
+        {
+          "id": 5,
+          "title": "Cluster CPU Usage %",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+          "datasource": { "type": "prometheus", "uid": "mimir" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "(1 - avg by(cluster)(rate(node_cpu_seconds_total{cluster=~\"$cluster\",mode=\"idle\"}[5m]))) * 100",
+              "legendFormat": "{{ cluster }}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 90 }]
+              }
+            }
+          },
+          "options": { "tooltip": { "mode": "multi" } }
+        },
+        {
+          "id": 6,
+          "title": "Cluster Memory Usage %",
+          "type": "timeseries",
+          "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+          "datasource": { "type": "prometheus", "uid": "mimir" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "(1 - sum by(cluster)(node_memory_MemAvailable_bytes{cluster=~\"$cluster\"}) / sum by(cluster)(node_memory_MemTotal_bytes{cluster=~\"$cluster\"})) * 100",
+              "legendFormat": "{{ cluster }}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 75 }, { "color": "red", "value": 90 }]
+              }
+            }
+          },
+          "options": { "tooltip": { "mode": "multi" } }
+        },
+        {
+          "id": 7,
+          "title": "Node Status",
+          "type": "table",
+          "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+          "datasource": { "type": "prometheus", "uid": "mimir" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "kube_node_status_condition{cluster=~\"$cluster\",condition=\"Ready\"}",
+              "legendFormat": "{{ node }}",
+              "instant": true
+            }
+          ],
+          "transformations": [
+            { "id": "labelsToFields", "options": { "mode": "columns" } },
+            { "id": "organize", "options": { "excludeByName": { "__name__": true, "job": true, "instance": true }, "renameByName": { "node": "Node", "cluster": "Cluster", "condition": "Condition", "status": "Status", "Value": "Ready" } } }
+          ],
+          "fieldConfig": { "defaults": { "custom": { "filterable": true } } },
+          "options": { "sortBy": [{ "displayName": "Node", "desc": false }] }
+        },
+        {
+          "id": 8,
+          "title": "Container Restart Rate",
+          "type": "timeseries",
+          "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+          "datasource": { "type": "prometheus", "uid": "mimir" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "topk(5, rate(kube_pod_container_status_restarts_total{cluster=~\"$cluster\"}[5m]) > 0)",
+              "legendFormat": "{{ namespace }}/{{ pod }}/{{ container }}"
+            }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" } },
+          "options": { "tooltip": { "mode": "multi" } }
+        }
+      ]
+    }

@@ -633,39 +633,6 @@ grafana:
                 description: 'PVC {{ "{{" }} $labels.persistentvolumeclaim {{ "}}" }} in namespace {{ "{{" }} $labels.namespace {{ "}}" }} is more than 95% full.'
               isPaused: false
 
-  # ── Dashboard Library (provisioned from grafana.com at startup) ───────────
-  dashboardProviders:
-    dashboardproviders.yaml:
-      apiVersion: 1
-      providers:
-        - name: infrastructure
-          orgId: 1
-          folder: Infrastructure
-          type: file
-          disableDeletion: true
-          editable: false
-          options:
-            path: /var/lib/grafana/dashboards/infrastructure
-
-  dashboards:
-    infrastructure:
-      node-exporter-full:
-        gnetId: 1860
-        revision: 37
-        datasource: Mimir
-      kubernetes-cluster-overview:
-        gnetId: 7249
-        revision: 1
-        datasource: Mimir
-      k8s-namespace-pods:
-        gnetId: 6417
-        revision: 1
-        datasource: Mimir
-      loki-dashboard:
-        gnetId: 13639
-        revision: 2
-        datasource: Loki
-
   # ── Ingress ───────────────────────────────────────────────────────────────
   ingress:
     enabled: true
