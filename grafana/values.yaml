@@ -54,19 +54,17 @@ grafana:
       token_url: https://login.microsoftonline.com/${AZURE_TENANT_ID}/oauth2/v2.0/token
       # Leave empty to allow all Azure AD users (restrict via RBAC below)
       allowed_domains: ""
-      # Gate: only members of monitoring-test-group can log in.
-      # Replace with the Object ID of monitoring-test-group from:
-      #   Azure Portal → Azure Active Directory → Groups → monitoring-test-group → Overview → Object ID
-      allowed_groups: "<MONITORING_TEST_GROUP_OID>"
-      # Role mapping via Azure AD sub-group membership.
+      # Gate: both groups can log in (comma-separated OIDs).
+      # monitoring-test-admin  OID: db8cbdd8-0a52-4409-94b5-4a79890c67fd
+      # monitoring-test-viewer OID: cd02937c-1974-4832-83ca-2cf035ac6c46
+      allowed_groups: "db8cbdd8-0a52-4409-94b5-4a79890c67fd,cd02937c-1974-4832-83ca-2cf035ac6c46"
+      # Role mapping: Admin if in monitoring-test-admin, Viewer otherwise.
       # Azure AD group structure:
-      #   monitoring-test-group        ← gate (set in allowed_groups above)
-      #   ├── monitoring-admins        ← Grafana Admin (can edit dashboards, manage alerts)
-      #   └── monitoring-viewers       ← Grafana Viewer (read-only, cannot see Platform Admin folder)
+      #   monitoring-test-admin   ← Grafana Admin (edit dashboards, manage alerts)
+      #   monitoring-test-viewer  ← Grafana Viewer (read-only, cannot see Platform Admin folder)
       #
-      # Replace OIDs with Object IDs from Azure Portal → Azure AD → Groups → <group> → Overview.
       # Requires App Registration manifest: "groupMembershipClaims": "SecurityGroup"
-      role_attribute_path: "contains(groups[*], '<MONITORING_ADMINS_OID>') && 'Admin' || 'Viewer'"
+      role_attribute_path: "contains(groups[*], 'db8cbdd8-0a52-4409-94b5-4a79890c67fd') && 'Admin' || 'Viewer'"
       role_attribute_strict: false
       allow_assign_grafana_admin: true
       skip_org_role_sync: false
@@ -642,6 +640,265 @@ grafana:
               annotations:
                 summary: 'PVC {{ "{{" }} $labels.persistentvolumeclaim {{ "}}" }} is critically full'
                 description: 'PVC {{ "{{" }} $labels.persistentvolumeclaim {{ "}}" }} in namespace {{ "{{" }} $labels.namespace {{ "}}" }} is more than 95% full.'
+              isPaused: false
+
+            # ── Error rate alerts ────────────────────────────────────────
+            - uid: infra-high-error-rate
+              title: HighErrorRate
+              condition: B
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: mimir
+                  model:
+                    datasource:
+                      type: prometheus
+                      uid: mimir
+                    expr: 'sum(rate(nginx_ingress_controller_requests{status=~"5.."}[5m])) / sum(rate(nginx_ingress_controller_requests[5m])) * 100'
+                    instant: true
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: A
+                - refId: B
+                  relativeTimeRange:
+                    from: 0
+                    to: 0
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                      - evaluator:
+                          params: [1]
+                          type: gt
+                        operator:
+                          type: and
+                        query:
+                          params: [A]
+                        reducer:
+                          type: last
+                        type: query
+                    datasource:
+                      type: __expr__
+                      uid: __expr__
+                    expression: A
+                    refId: B
+                    type: classic_conditions
+              noDataState: OK
+              execErrState: Error
+              for: 5m
+              labels:
+                severity: warning
+              annotations:
+                summary: 'High HTTP error rate on ingress'
+                description: 'Ingress HTTP 5xx error rate has been above 1% for more than 5 minutes.'
+              isPaused: false
+
+            - uid: infra-high-error-rate-critical
+              title: HighErrorRateCritical
+              condition: B
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 300
+                    to: 0
+                  datasourceUid: mimir
+                  model:
+                    datasource:
+                      type: prometheus
+                      uid: mimir
+                    expr: 'sum(rate(nginx_ingress_controller_requests{status=~"5.."}[5m])) / sum(rate(nginx_ingress_controller_requests[5m])) * 100'
+                    instant: true
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: A
+                - refId: B
+                  relativeTimeRange:
+                    from: 0
+                    to: 0
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                      - evaluator:
+                          params: [5]
+                          type: gt
+                        operator:
+                          type: and
+                        query:
+                          params: [A]
+                        reducer:
+                          type: last
+                        type: query
+                    datasource:
+                      type: __expr__
+                      uid: __expr__
+                    expression: A
+                    refId: B
+                    type: classic_conditions
+              noDataState: OK
+              execErrState: Error
+              for: 2m
+              labels:
+                severity: critical
+              annotations:
+                summary: 'Critical HTTP error rate on ingress'
+                description: 'Ingress HTTP 5xx error rate has been above 5% for more than 2 minutes.'
+              isPaused: false
+
+            # ── Image pull errors ────────────────────────────────────────
+            - uid: infra-image-pull-error
+              title: ImagePullError
+              condition: B
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: mimir
+                  model:
+                    datasource:
+                      type: prometheus
+                      uid: mimir
+                    expr: 'sum by(namespace, pod, container)(kube_pod_container_status_waiting_reason{reason=~"ImagePullBackOff|ErrImagePull"})'
+                    instant: true
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: A
+                - refId: B
+                  relativeTimeRange:
+                    from: 0
+                    to: 0
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                      - evaluator:
+                          params: [0]
+                          type: gt
+                        operator:
+                          type: and
+                        query:
+                          params: [A]
+                        reducer:
+                          type: last
+                        type: query
+                    datasource:
+                      type: __expr__
+                      uid: __expr__
+                    expression: A
+                    refId: B
+                    type: classic_conditions
+              noDataState: OK
+              execErrState: Error
+              for: 5m
+              labels:
+                severity: critical
+              annotations:
+                summary: 'Image pull error: {{ "{{" }} $labels.namespace {{ "}}" }}/{{ "{{" }} $labels.pod {{ "}}" }}'
+                description: 'Container {{ "{{" }} $labels.container {{ "}}" }} in {{ "{{" }} $labels.namespace {{ "}}" }}/{{ "{{" }} $labels.pod {{ "}}" }} cannot pull its image (ImagePullBackOff or ErrImagePull).'
+              isPaused: false
+
+            # ── OOM killed ───────────────────────────────────────────────
+            - uid: infra-oom-killed
+              title: OOMKilled
+              condition: B
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 300
+                    to: 0
+                  datasourceUid: mimir
+                  model:
+                    datasource:
+                      type: prometheus
+                      uid: mimir
+                    expr: 'sum by(namespace, pod, container)(kube_pod_container_status_last_terminated_reason{reason="OOMKilled"})'
+                    instant: true
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: A
+                - refId: B
+                  relativeTimeRange:
+                    from: 0
+                    to: 0
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                      - evaluator:
+                          params: [0]
+                          type: gt
+                        operator:
+                          type: and
+                        query:
+                          params: [A]
+                        reducer:
+                          type: last
+                        type: query
+                    datasource:
+                      type: __expr__
+                      uid: __expr__
+                    expression: A
+                    refId: B
+                    type: classic_conditions
+              noDataState: OK
+              execErrState: Error
+              for: 0s
+              labels:
+                severity: critical
+              annotations:
+                summary: 'OOM killed: {{ "{{" }} $labels.namespace {{ "}}" }}/{{ "{{" }} $labels.pod {{ "}}" }}'
+                description: 'Container {{ "{{" }} $labels.container {{ "}}" }} in {{ "{{" }} $labels.namespace {{ "}}" }}/{{ "{{" }} $labels.pod {{ "}}" }} was terminated due to OOM (out of memory).'
+              isPaused: false
+
+            # ── Critical container errors ────────────────────────────────
+            - uid: infra-container-critical-error
+              title: ContainerCriticalError
+              condition: B
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: mimir
+                  model:
+                    datasource:
+                      type: prometheus
+                      uid: mimir
+                    expr: 'sum by(namespace, pod, container)(kube_pod_container_status_waiting_reason{reason=~"RunContainerError|CreateContainerConfigError|CreateContainerError|InvalidImageName"})'
+                    instant: true
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: A
+                - refId: B
+                  relativeTimeRange:
+                    from: 0
+                    to: 0
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                      - evaluator:
+                          params: [0]
+                          type: gt
+                        operator:
+                          type: and
+                        query:
+                          params: [A]
+                        reducer:
+                          type: last
+                        type: query
+                    datasource:
+                      type: __expr__
+                      uid: __expr__
+                    expression: A
+                    refId: B
+                    type: classic_conditions
+              noDataState: OK
+              execErrState: Error
+              for: 5m
+              labels:
+                severity: critical
+              annotations:
+                summary: 'Container error: {{ "{{" }} $labels.namespace {{ "}}" }}/{{ "{{" }} $labels.pod {{ "}}" }}'
+                description: 'Container {{ "{{" }} $labels.container {{ "}}" }} in {{ "{{" }} $labels.namespace {{ "}}" }}/{{ "{{" }} $labels.pod {{ "}}" }} is stuck with a critical error ({{ "{{" }} $labels.reason {{ "}}" }}).'
               isPaused: false
 
   # ── Ingress ───────────────────────────────────────────────────────────────
