@@ -58,13 +58,15 @@ grafana:
       # monitoring-test-admin  OID: db8cbdd8-0a52-4409-94b5-4a79890c67fd
       # monitoring-test-viewer OID: cd02937c-1974-4832-83ca-2cf035ac6c46
       allowed_groups: "db8cbdd8-0a52-4409-94b5-4a79890c67fd,cd02937c-1974-4832-83ca-2cf035ac6c46"
-      # Role mapping: Admin if in monitoring-test-admin, Viewer otherwise.
+      # Grafana 12: use org_mapping for group→role assignment (replaces role_attribute_path for AzureAD).
+      # Format: <group-OID>:<org-id>:<role>  (space-separated, org-id 1 = default org)
       # Azure AD group structure:
       #   monitoring-test-admin   ← Grafana Admin (edit dashboards, manage alerts)
       #   monitoring-test-viewer  ← Grafana Viewer (read-only, cannot see Platform Admin folder)
       #
       # Requires App Registration manifest: "groupMembershipClaims": "SecurityGroup"
-      role_attribute_path: "contains(groups[*], 'db8cbdd8-0a52-4409-94b5-4a79890c67fd') && 'Admin' || 'Viewer'"
+      org_mapping: "db8cbdd8-0a52-4409-94b5-4a79890c67fd:1:Admin cd02937c-1974-4832-83ca-2cf035ac6c46:1:Viewer"
+      role_attribute_path: ""
       role_attribute_strict: false
       allow_assign_grafana_admin: true
       skip_org_role_sync: false
