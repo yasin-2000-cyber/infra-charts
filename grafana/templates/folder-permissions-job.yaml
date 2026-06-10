@@ -1,0 +1,101 @@
+---
+# PostSync Job — sets Grafana folder permissions after every ArgoCD sync.
+# Runs as the admin user, using the admin password from grafana-admin-secret.
+#
+# Folder layout enforced:
+#   "AAU Monitoring"  — Viewers can view, Admins can edit
+#   "Platform Admin"  — Admins only (hidden from Viewers)
+#
+# This is idempotent: safe to re-run on every sync.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: grafana-folder-permissions
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: set-permissions
+          image: python:3.12-alpine
+          env:
+            - name: GF_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-admin-secret
+                  key: admin-password
+          command:
+            - python3
+            - -c
+            - |
+              import urllib.request, json, time, base64, os, sys
+
+              GF   = "http://grafana.monitoring.svc.cluster.local"
+              AUTH = base64.b64encode(("admin:" + os.environ["GF_PASS"]).encode()).decode()
+              HDR  = {"Authorization": "Basic " + AUTH, "Content-Type": "application/json"}
+
+              def api(method, path, data=None):
+                  body = json.dumps(data).encode() if data else None
+                  req  = urllib.request.Request(GF + path, data=body, headers=HDR, method=method)
+                  try:
+                      with urllib.request.urlopen(req, timeout=10) as r:
+                          return json.loads(r.read())
+                  except urllib.error.HTTPError as e:
+                      if e.code in (409, 412):   # folder already exists
+                          return {}
+                      print("HTTP", e.code, method, path, e.read().decode(), file=sys.stderr)
+                      raise
+
+              # Wait for Grafana
+              print("Waiting for Grafana...")
+              for _ in range(60):
+                  try:
+                      urllib.request.urlopen(GF + "/api/health", timeout=5)
+                      print("Grafana ready.")
+                      break
+                  except Exception:
+                      time.sleep(5)
+              else:
+                  print("Grafana did not become ready.", file=sys.stderr)
+                  sys.exit(1)
+
+              # Desired folder → permission mapping
+              # permission values: 1=View, 2=Edit, 4=Admin
+              FOLDERS = {
+                  "AAU Monitoring": [
+                      {"role": "Viewer", "permission": 1},
+                      {"role": "Admin",  "permission": 4},
+                  ],
+                  "Platform Admin": [
+                      {"role": "Admin",  "permission": 4},
+                  ],
+              }
+
+              # Build a title → uid map from existing folders
+              existing = {f["title"]: f["uid"] for f in api("GET", "/api/folders?limit=100")}
+
+              for title, items in FOLDERS.items():
+                  if title not in existing:
+                      result = api("POST", "/api/folders", {"title": title})
+                      uid    = result.get("uid", title.lower().replace(" ", "-"))
+                      print(f"Created folder '{title}' uid={uid}")
+                  else:
+                      uid = existing[title]
+                      print(f"Found folder '{title}' uid={uid}")
+
+                  api("POST", f"/api/folders/{uid}/permissions", {"items": items})
+                  print(f"  permissions applied.")
+
+              print("Done.")
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi

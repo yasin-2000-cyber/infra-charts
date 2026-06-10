@@ -54,13 +54,19 @@ grafana:
       token_url: https://login.microsoftonline.com/${AZURE_TENANT_ID}/oauth2/v2.0/token
       # Leave empty to allow all Azure AD users (restrict via RBAC below)
       allowed_domains: ""
-      # Set to comma-separated group OIDs to restrict login; empty = all Azure AD users allowed
-      allowed_groups: ""
-      # JMESPath expression mapping Azure AD groups claim to Grafana roles.
-      # Replace <ADMIN_GROUP_OID> and <EDITOR_GROUP_OID> with real Object IDs from Azure AD portal:
-      #   Azure Portal → Azure Active Directory → Groups → <group> → Overview → Object ID
-      # Requires: App Registration manifest → "groupMembershipClaims": "SecurityGroup"
-      role_attribute_path: "contains(groups[*], '<ADMIN_GROUP_OID>') && 'Admin' || contains(groups[*], '<EDITOR_GROUP_OID>') && 'Editor' || 'Viewer'"
+      # Gate: only members of monitoring-test-group can log in.
+      # Replace with the Object ID of monitoring-test-group from:
+      #   Azure Portal → Azure Active Directory → Groups → monitoring-test-group → Overview → Object ID
+      allowed_groups: "<MONITORING_TEST_GROUP_OID>"
+      # Role mapping via Azure AD sub-group membership.
+      # Azure AD group structure:
+      #   monitoring-test-group        ← gate (set in allowed_groups above)
+      #   ├── monitoring-admins        ← Grafana Admin (can edit dashboards, manage alerts)
+      #   └── monitoring-viewers       ← Grafana Viewer (read-only, cannot see Platform Admin folder)
+      #
+      # Replace OIDs with Object IDs from Azure Portal → Azure AD → Groups → <group> → Overview.
+      # Requires App Registration manifest: "groupMembershipClaims": "SecurityGroup"
+      role_attribute_path: "contains(groups[*], '<MONITORING_ADMINS_OID>') && 'Admin' || 'Viewer'"
       role_attribute_strict: false
       allow_assign_grafana_admin: true
       skip_org_role_sync: false
@@ -175,6 +181,11 @@ grafana:
       labelValue: "1"
       folder: /var/lib/grafana/dashboards/hub
       searchNamespace: ALL
+      # Reads the 'grafana_folder' annotation on each ConfigMap to place the
+      # dashboard in the correct Grafana UI folder.
+      folderAnnotation: grafana_folder
+      provider:
+        allowUiUpdates: true
     datasources:
       enabled: false   # We provision datasources via values above
 
